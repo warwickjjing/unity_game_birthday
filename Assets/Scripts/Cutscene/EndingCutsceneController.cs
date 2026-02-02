@@ -8,13 +8,13 @@ namespace BirthdayCakeQuest.Cutscene
 {
     /// <summary>
     /// 엔딩 컷씬을 제어합니다.
-    /// 모든 재료가 수집되면 Timeline 컷씬을 재생하고,
-    /// 컷씬이 끝나면 엔딩 UI를 표시합니다.
+    /// 소파 인터랙션으로 Timeline 컷씬을 재생하고,
+    /// 컷씬이 끝나면 크레딧과 엔딩 UI를 표시합니다.
     /// </summary>
     public sealed class EndingCutsceneController : MonoBehaviour
     {
         [Header("Triggers")]
-        [Tooltip("재료 인벤토리 (이벤트 구독용)")]
+        [Tooltip("재료 인벤토리 (케이크 표시용)")]
         [SerializeField] private IngredientInventory inventory;
 
         [Header("Cutscene")]
@@ -22,7 +22,7 @@ namespace BirthdayCakeQuest.Cutscene
         [SerializeField] private PlayableDirector director;
 
         [Header("Optional Components")]
-        [Tooltip("플레이어 컨트롤러 (입력 잠금용)")]
+        [Tooltip("플레이어 컨트롤러 (입력 잠금 및 케이크 표시용)")]
         [SerializeField] private PlayerController playerController;
         
         [Tooltip("게임플레이 UI 루트 (컷씬 중 숨김)")]
@@ -30,6 +30,9 @@ namespace BirthdayCakeQuest.Cutscene
         
         [Tooltip("엔딩 UI 루트 (컷씬 후 표시)")]
         [SerializeField] private GameObject endingUIRoot;
+
+        [Tooltip("크레딧 UI 루트 (영상 후 표시)")]
+        [SerializeField] private GameObject creditsUIRoot;
         
         [Tooltip("VideoPlayer (선택, Timeline에서 제어 가능)")]
         [SerializeField] private VideoPlayer videoPlayer;
@@ -38,30 +41,50 @@ namespace BirthdayCakeQuest.Cutscene
         [Tooltip("VideoPlayer를 스크립트에서 직접 재생할지 여부")]
         [SerializeField] private bool controlVideoFromScript = false;
 
+        [Tooltip("소파 앉기 위치 (플레이어가 이동할 좌표)")]
+        [SerializeField] private Transform sofaSitPosition;
+
         private bool _played;
 
         private void OnEnable()
         {
+            // 모든 재료 수집 시 케이크 표시
             if (inventory != null)
-                inventory.OnAllCollected += Play;
+                inventory.OnAllCollected += OnAllIngredientsCollected;
 
             if (director != null)
                 director.stopped += OnDirectorStopped;
+
+            // 크레딧 UI 초기에 숨김
+            if (creditsUIRoot != null)
+                creditsUIRoot.SetActive(false);
         }
 
         private void OnDisable()
         {
             if (inventory != null)
-                inventory.OnAllCollected -= Play;
+                inventory.OnAllCollected -= OnAllIngredientsCollected;
 
             if (director != null)
                 director.stopped -= OnDirectorStopped;
         }
 
+        private void OnAllIngredientsCollected()
+        {
+            Debug.Log("[EndingCutsceneController] All ingredients collected! Showing cake.");
+            
+            // 플레이어에게 케이크 표시
+            if (playerController != null)
+            {
+                playerController.ShowCake();
+            }
+        }
+
         /// <summary>
-        /// 엔딩 컷씬을 재생합니다.
+        /// 소파에서 엔딩 컷씬을 시작합니다.
         /// </summary>
-        public void Play()
+        /// <param name="playerTransform">플레이어의 Transform</param>
+        public void StartFromSofa(Transform playerTransform)
         {
             if (_played)
             {
@@ -70,7 +93,14 @@ namespace BirthdayCakeQuest.Cutscene
             }
             
             _played = true;
-            Debug.Log("[EndingCutsceneController] ENDING CUTSCENE STARTED!");
+            Debug.Log("[EndingCutsceneController] ENDING CUTSCENE STARTED FROM SOFA!");
+
+            // 플레이어를 소파 위치로 이동
+            if (sofaSitPosition != null && playerTransform != null)
+            {
+                playerTransform.position = sofaSitPosition.position;
+                playerTransform.rotation = sofaSitPosition.rotation;
+            }
 
             // 플레이어 입력 비활성화
             if (playerController != null)
@@ -84,10 +114,15 @@ namespace BirthdayCakeQuest.Cutscene
                 gameplayUIRoot.SetActive(false);
             }
 
-            // 엔딩 UI 숨김 (컷씬 후 표시)
+            // 엔딩 UI와 크레딧 숨김 (나중에 표시)
             if (endingUIRoot != null)
             {
                 endingUIRoot.SetActive(false);
+            }
+
+            if (creditsUIRoot != null)
+            {
+                creditsUIRoot.SetActive(false);
             }
 
             // VideoPlayer 제어 (선택)
@@ -117,6 +152,15 @@ namespace BirthdayCakeQuest.Cutscene
             }
         }
 
+        /// <summary>
+        /// 엔딩 컷씬을 재생합니다 (레거시, 이제 StartFromSofa 사용).
+        /// </summary>
+        [System.Obsolete("Use StartFromSofa instead")]
+        public void Play()
+        {
+            StartFromSofa(playerController?.transform);
+        }
+
         private void OnVideoPrepared(VideoPlayer source)
         {
             source.prepareCompleted -= OnVideoPrepared;
@@ -128,16 +172,39 @@ namespace BirthdayCakeQuest.Cutscene
         {
             Debug.Log("[EndingCutsceneController] Timeline cutscene ended");
 
-            // 엔딩 UI 표시
-            if (endingUIRoot != null)
-            {
-                endingUIRoot.SetActive(true);
-            }
-
             // VideoPlayer 정리
             if (videoPlayer != null && videoPlayer.isPlaying)
             {
                 videoPlayer.Stop();
+            }
+
+            // 크레딧 표시 (Signal에서도 호출 가능)
+            ShowCredits();
+        }
+
+        /// <summary>
+        /// 크레딧을 표시합니다.
+        /// </summary>
+        public void ShowCredits()
+        {
+            Debug.Log("[EndingCutsceneController] Showing credits");
+
+            if (creditsUIRoot != null)
+            {
+                creditsUIRoot.SetActive(true);
+            }
+        }
+
+        /// <summary>
+        /// 엔딩 UI를 표시합니다 (크레딧 이후).
+        /// </summary>
+        public void ShowEndingUI()
+        {
+            Debug.Log("[EndingCutsceneController] Showing ending UI");
+
+            if (endingUIRoot != null)
+            {
+                endingUIRoot.SetActive(true);
             }
         }
 
@@ -148,7 +215,7 @@ namespace BirthdayCakeQuest.Cutscene
         public void PlayTest()
         {
             _played = false;
-            Play();
+            StartFromSofa(playerController?.transform);
         }
 
         /// <summary>

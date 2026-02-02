@@ -5,16 +5,19 @@ VRM 캐릭터로 집 안을 탐험하며 케이크 재료를 모으는 Unity 게
 ## ✨ 게임 특징
 
 - **VRM 캐릭터**: UniVRM을 통해 VRM 모델을 플레이어로 사용
-- **3/4 뷰 카메라**: Isometric 느낌의 고정 각도 카메라
+- **아이소메트릭 3/4뷰 카메라**: 고정된 각도의 쿼터뷰 카메라
 - **수집 시스템**: 5가지 케이크 재료를 집 안에서 찾아 수집
+- **미니게임 시스템**: 재료별 고유한 미니게임 (설탕 따르기 등)
 - **체크리스트 UI**: 실시간으로 수집 진행 상황 표시
+- **문 상호작용**: E키로 열고 닫을 수 있는 문 + Floating UI 프롬프트
 - **엔딩 컷씬**: Timeline과 VideoPlayer를 활용한 영상 재생
 
 ## 🎮 조작 방법
 
 - **WASD**: 이동
 - **Shift**: 달리기
-- **E**: 재료 수집
+- **E**: 재료 수집 / 문 열고 닫기
+- **마우스/스페이스바**: 미니게임 플레이 (재료별 상이)
 
 ## 🛠 요구 사항
 
@@ -68,16 +71,40 @@ VRM 캐릭터로 집 안을 탐험하며 케이크 재료를 모으는 Unity 게
 6. Generate Font Atlas → Save
 7. UI 텍스트의 Font Asset을 생성한 폰트로 변경
 
-### 4. 씬 구성
+### 4. 집 구조 자동 생성 (신규!)
+
+**간단한 방법**: Unity Editor 메뉴 사용
+```
+1. Unity Editor 상단 메뉴:
+   Tools → Birthday Cake Quest → Generate House + Ingredients
+
+2. "생성" 클릭
+
+3. 완료! 모든 방과 재료가 자동으로 배치됩니다.
+```
+
+자세한 내용은 [House Generator 가이드](Docs/House_Generator_Complete_Guide.md)를 참고하세요.
+
+**생성되는 공간** (L자형 레이아웃):
+- 입구 및 복도 (T자 구조)
+- 침실1 (좌측)
+- 침실+화장실 (앙스위트)
+- 부엌/거실 (오픈 플랜, 10m x 6m)
+- 침실2 (거실 오른쪽)
+- 소파 & TV 자동 배치
+- **하얀 대리석 바닥** (반짝반짝)
+
+### 5. 씬 구성
 
 자세한 내용은 [씬 구성 가이드](Docs/Scene_Setup_Guide.md)를 참고하세요.
 
 **빠른 체크리스트**:
 - [ ] Home.unity 씬 생성
+- [ ] **[자동] House 생성** (Tools → Generate House + Ingredients)
 - [ ] VRM 캐릭터를 Player로 설정
 - [ ] CharacterController, PlayerController, Interactor 추가
 - [ ] 카메라에 IsometricFollowCamera 추가
-- [ ] 재료 오브젝트 5개 배치 (CollectibleIngredient 스크립트 포함)
+- [ ] **[자동] 재료 5개 자동 배치됨**
 - [ ] UI Canvas 및 IngredientChecklistUI 설정
 - [ ] Timeline 컷씬 및 EndingCutsceneController 설정
 - [ ] 모든 참조 연결
@@ -87,6 +114,7 @@ VRM 캐릭터로 집 안을 탐험하며 케이크 재료를 모으는 Unity 게
 ```
 Assets/
 ├── Scenes/
+│   ├── TitleScene.unity        # 타이틀 화면
 │   └── Home.unity              # 메인 게임 씬
 ├── Scripts/
 │   ├── Player/                 # 플레이어 이동 및 상호작용
@@ -99,13 +127,36 @@ Assets/
 │   ├── Camera/                 # 카메라 추적
 │   │   └── IsometricFollowCamera.cs
 │   ├── UI/                     # UI 시스템
-│   │   └── IngredientChecklistUI.cs
-│   └── Cutscene/               # 컷씬 제어
-│       └── EndingCutsceneController.cs
+│   │   ├── IngredientChecklistUI.cs
+│   │   ├── TitleScreenUI.cs
+│   │   └── CreditsScroller.cs
+│   ├── Cutscene/               # 컷씬 제어
+│   │   ├── EndingCutsceneController.cs
+│   │   └── EndingSignalReceiver.cs
+│   ├── Interaction/            # 상호작용 시스템
+│   │   ├── IInteractable.cs
+│   │   └── SofaInteractable.cs
+│   ├── Props/                  # 소품/가구
+│   │   ├── Door.cs
+│   │   └── CakeHolder.cs
+│   ├── Managers/               # 게임 매니저
+│   │   └── SceneLoader.cs
+│   └── Tools/                  # 에디터 도구
+│       └── HouseGenerator.cs   # 집 자동 생성 도구 ✨
+├── Editor/                     # Unity Editor 스크립트
+│   └── HouseGeneratorEditor.cs # 집 생성 메뉴
 ├── Prefabs/                    # 프리팹 보관
+│   ├── Ingredient_*.prefab     # 재료 프리팹들
+│   └── Cake.prefab
 ├── Video/                      # 엔딩 영상
 ├── Materials/                  # 머티리얼
-└── VRM/                        # VRM 캐릭터 파일
+├── VRM/                        # VRM 캐릭터 파일
+└── Docs/                       # 문서
+    ├── UniVRM_Setup_Guide.md
+    ├── Scene_Setup_Guide.md
+    ├── Korean_Font_Setup_Guide.md
+    ├── Ending_Cutscene_Setup_Guide.md
+    └── House_Generator_Complete_Guide.md ✨
 ```
 
 ## 🎯 게임 플레이 흐름
@@ -198,6 +249,19 @@ graph TD
 - [ ] EndingCutsceneController의 모든 참조 연결 확인
 - [ ] Console에서 에러 메시지 확인
 
+### E키를 눌러도 문이 안 열림 / 재료를 수집할 수 없음
+
+**체크리스트**:
+- [ ] 문/재료 GameObject의 Layer가 "Interactable"인지 확인
+- [ ] BoxCollider가 있고 Is Trigger가 체크되어 있는지 확인
+- [ ] Door/CollectibleIngredient 스크립트가 추가되어 있는지 확인
+- [ ] Player에 Interactor 컴포넌트가 있는지 확인
+- [ ] Console 창에서 디버그 로그 확인
+
+**자세한 해결 방법**: 
+- [상호작용 문제 해결 가이드](Docs/Troubleshooting_Interaction.md) - **이슈 진단 및 해결**
+- [문 상호작용 가이드](Docs/Door_Interaction_Guide.md)
+
 ### UI 한글이 □(네모)로 표시됨
 
 **증상**: 체크리스트 UI에서 한글이 모두 네모로 표시됨
@@ -210,9 +274,15 @@ graph TD
 
 ## 📚 상세 문서
 
-- [UniVRM 설치 가이드](Docs/UniVRM_Setup_Guide.md)
-- [씬 구성 가이드](Docs/Scene_Setup_Guide.md)
-- [VRM 임포트 문제 해결](Docs/VRM_Import_Troubleshooting.md)
+- [UniVRM 설치 가이드](Docs/UniVRM_Setup_Guide.md) - VRM 모델 임포트 방법
+- [씬 구성 가이드](Docs/Scene_Setup_Guide.md) - 게임 씬 설정 가이드
+- [한글 폰트 설정 가이드](Docs/Korean_Font_Setup_Guide.md) - TextMeshPro 한글 폰트 설정
+- [엔딩 컷씬 설정 가이드](Docs/Ending_Cutscene_Setup_Guide.md) - Timeline/영상 재생 설정
+- **[House Generator 가이드](Docs/House_Generator_Complete_Guide.md)** ✨ - 집 자동 생성 도구
+- **[문 상호작용 가이드](Docs/Door_Interaction_Guide.md)** 🚪 - E키로 문 열고 닫기
+- **[미니게임 시스템 가이드](Docs/MiniGame_Setup_Guide.md)** 🎮 - 재료별 미니게임 설정
+- **[미니게임 Unity 설정](Docs/MiniGame_Unity_Setup.md)** 🎨 - Unity Editor에서 미니게임 UI 설정
+- **[상호작용 문제 해결 가이드](Docs/Troubleshooting_Interaction.md)** 🔧 - 상호작용 오류 진단 및 해결
 
 ## 🔧 커스터마이징
 

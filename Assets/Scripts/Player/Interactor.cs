@@ -1,20 +1,21 @@
 using UnityEngine;
 using BirthdayCakeQuest.Ingredients;
+using BirthdayCakeQuest.Interaction;
 
 namespace BirthdayCakeQuest.Player
 {
     /// <summary>
-    /// 플레이어 근처의 수집 가능한 재료와 상호작용합니다.
-    /// E키를 눌러 재료를 수집할 수 있습니다.
+    /// 플레이어 근처의 상호작용 가능한 오브젝트와 상호작용합니다.
+    /// E키를 눌러 재료를 수집하거나 다른 오브젝트와 상호작용할 수 있습니다.
     /// </summary>
     public sealed class Interactor : MonoBehaviour
     {
         [Header("Interaction")]
-        [Tooltip("재료 감지 범위")]
+        [Tooltip("상호작용 오브젝트 감지 범위")]
         [SerializeField] private float detectionRadius = 2f;
         
-        [Tooltip("재료 레이어")]
-        [SerializeField] private LayerMask ingredientLayer = ~0;
+        [Tooltip("상호작용 가능한 오브젝트 레이어")]
+        [SerializeField] private LayerMask interactionLayer = ~0;
 
         [Header("Input")]
         [SerializeField] private KeyCode interactKey = KeyCode.E;
@@ -23,19 +24,37 @@ namespace BirthdayCakeQuest.Player
         [Tooltip("상호작용 가능할 때 표시할 UI")]
         [SerializeField] private GameObject interactionPrompt;
 
-        private CollectibleIngredient _nearestIngredient;
-        private Collider[] _detectionBuffer = new Collider[10];
+        private IInteractable _nearestInteractable;
+        private Collider[] _detectionBuffer = new Collider[20];
+        private bool _isPaused = false;
 
         private void Update()
         {
-            DetectNearbyIngredients();
+            if (_isPaused)
+                return;
+
+            DetectNearbyInteractables();
             HandleInteractionInput();
             UpdateInteractionPrompt();
         }
 
-        private void DetectNearbyIngredients()
+        /// <summary>
+        /// Interactor를 일시정지/재개합니다.
+        /// </summary>
+        public void SetPaused(bool paused)
         {
-            _nearestIngredient = null;
+            _isPaused = paused;
+
+            // 일시정지 시 프롬프트 숨기기
+            if (paused && interactionPrompt != null)
+            {
+                interactionPrompt.SetActive(false);
+            }
+        }
+
+        private void DetectNearbyInteractables()
+        {
+            _nearestInteractable = null;
             float closestDistance = float.MaxValue;
 
             // 주변 콜라이더 검색
@@ -43,38 +62,53 @@ namespace BirthdayCakeQuest.Player
                 transform.position,
                 detectionRadius,
                 _detectionBuffer,
-                ingredientLayer
+                interactionLayer
             );
+
+            // 디버그: 감지된 콜라이더 수 로그
+            if (hitCount > 0)
+            {
+                Debug.Log($"[Interactor] Found {hitCount} colliders in range");
+            }
 
             for (int i = 0; i < hitCount; i++)
             {
-                var ingredient = _detectionBuffer[i].GetComponent<CollectibleIngredient>();
-                if (ingredient == null)
-                    continue;
-
-                float distance = Vector3.Distance(transform.position, ingredient.transform.position);
+                var interactable = _detectionBuffer[i].GetComponent<IInteractable>();
                 
-                // 재료의 상호작용 범위 안에 있는지 확인
-                if (distance <= ingredient.InteractionRadius && distance < closestDistance)
+                if (interactable == null)
+                {
+                    Debug.Log($"[Interactor] {_detectionBuffer[i].name} has no IInteractable component");
+                    continue;
+                }
+                
+                if (!interactable.CanInteract)
+                {
+                    Debug.Log($"[Interactor] {_detectionBuffer[i].name} CanInteract is false");
+                    continue;
+                }
+
+                Transform interactableTransform = interactable.GetTransform();
+                float distance = Vector3.Distance(transform.position, interactableTransform.position);
+                
+                // 상호작용 범위 안에 있는지 확인
+                if (distance <= detectionRadius && distance < closestDistance)
                 {
                     closestDistance = distance;
-                    _nearestIngredient = ingredient;
+                    _nearestInteractable = interactable;
+                    Debug.Log($"[Interactor] Nearest interactable: {_detectionBuffer[i].name} at distance {distance:F2}m");
                 }
             }
         }
 
         private void HandleInteractionInput()
         {
-            if (_nearestIngredient == null)
+            if (_nearestInteractable == null)
                 return;
 
             if (Input.GetKeyDown(interactKey))
             {
-                if (_nearestIngredient.TryCollect())
-                {
-                    Debug.Log($"[Interactor] {_nearestIngredient.Id} 수집!");
-                    _nearestIngredient = null;
-                }
+                Debug.Log($"[Interactor] Interacting with: {_nearestInteractable.GetInteractPrompt()}");
+                _nearestInteractable.Interact(gameObject);
             }
         }
 
@@ -83,7 +117,7 @@ namespace BirthdayCakeQuest.Player
             if (interactionPrompt == null)
                 return;
 
-            bool shouldShow = _nearestIngredient != null;
+            bool shouldShow = _nearestInteractable != null;
             if (interactionPrompt.activeSelf != shouldShow)
             {
                 interactionPrompt.SetActive(shouldShow);
@@ -96,13 +130,22 @@ namespace BirthdayCakeQuest.Player
             Gizmos.color = Color.cyan;
             Gizmos.DrawWireSphere(transform.position, detectionRadius);
 
-            // 가장 가까운 재료 표시
-            if (_nearestIngredient != null && Application.isPlaying)
+            // 가장 가까운 상호작용 오브젝트 표시
+            if (_nearestInteractable != null && Application.isPlaying)
             {
                 Gizmos.color = Color.green;
-                Gizmos.DrawLine(transform.position, _nearestIngredient.transform.position);
+                Transform target = _nearestInteractable.GetTransform();
+                if (target != null)
+                {
+                    Gizmos.DrawLine(transform.position, target.position);
+                }
             }
         }
+
+        /// <summary>
+        /// 현재 가장 가까운 상호작용 가능한 오브젝트를 반환합니다.
+        /// </summary>
+        public IInteractable NearestInteractable => _nearestInteractable;
     }
 }
 

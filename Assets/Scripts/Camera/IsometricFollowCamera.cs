@@ -14,10 +14,13 @@ namespace BirthdayCakeQuest.Camera
 
         [Header("Camera Settings")]
         [Tooltip("카메라와 플레이어 사이의 오프셋")]
-        [SerializeField] private Vector3 offset = new Vector3(0f, 10f, -8f);
+        [SerializeField] private Vector3 offset = new Vector3(0f, 12f, -10f);
         
-        [Tooltip("카메라 회전 각도 (X축)")]
+        [Tooltip("카메라 회전 각도 (X축) - 3/4뷰는 45도")]
         [SerializeField] private float angleX = 45f;
+        
+        [Tooltip("카메라 Y축 회전 (3/4뷰는 0도 또는 45도)")]
+        [SerializeField] private float angleY = 0f;
 
         [Header("Follow Settings")]
         [Tooltip("카메라 이동 속도 (높을수록 즉시 반응)")]
@@ -33,14 +36,23 @@ namespace BirthdayCakeQuest.Camera
         [SerializeField] private Vector3 boundsMax = new Vector3(50f, 20f, 50f);
 
         private Vector3 _currentVelocity;
+        private bool _isPaused = false;
 
         private void LateUpdate()
         {
-            if (target == null)
+            if (target == null || _isPaused)
                 return;
 
             UpdateCameraPosition();
             UpdateCameraRotation();
+        }
+
+        /// <summary>
+        /// 카메라를 일시정지/재개합니다.
+        /// </summary>
+        public void SetPaused(bool paused)
+        {
+            _isPaused = paused;
         }
 
         private void UpdateCameraPosition()
@@ -78,9 +90,14 @@ namespace BirthdayCakeQuest.Camera
 
         private void UpdateCameraRotation()
         {
-            // 고정된 각도로 타겟을 바라봄
-            Quaternion targetRotation = Quaternion.Euler(angleX, 0f, 0f);
+            // 3/4 쿼터뷰를 위한 고정 각도
+            // X축 45도 = 위에서 내려다보는 각도
+            // Y축 0도 = 정면, 45도 = 대각선 뷰
+            Quaternion targetRotation = Quaternion.Euler(angleX, angleY, 0f);
             transform.rotation = targetRotation;
+            
+            // 회전 잠금 보장 (미니게임 등에서도 유지)
+            transform.eulerAngles = new Vector3(angleX, angleY, 0f);
         }
 
         /// <summary>

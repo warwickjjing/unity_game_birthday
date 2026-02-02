@@ -22,6 +22,10 @@ namespace BirthdayCakeQuest.Player
         [Header("Animation")]
         [SerializeField] private Animator animator;
 
+        [Header("Props")]
+        [Tooltip("케이크 홀더 (손에 들고 있는 케이크)")]
+        [SerializeField] private GameObject cakeHolder;
+
         private CharacterController _controller;
         private Vector3 _velocity;
         private bool _isGrounded;
@@ -35,6 +39,12 @@ namespace BirthdayCakeQuest.Player
             if (animator == null)
             {
                 animator = GetComponentInChildren<Animator>();
+            }
+
+            // 케이크는 초기에 숨김
+            if (cakeHolder != null)
+            {
+                cakeHolder.SetActive(false);
             }
         }
 
@@ -140,10 +150,49 @@ namespace BirthdayCakeQuest.Player
                 // 입력 비활성화 시 속도 초기화
                 _velocity.x = 0f;
                 _velocity.z = 0f;
+                
+                // 애니메이션 정지
+                if (animator != null)
+                {
+                    animator.SetBool("IsMoving", false);
+                    animator.SetFloat("Speed", 0f);
+                }
             }
         }
 
+        /// <summary>
+        /// 플레이어를 일시정지/재개합니다.
+        /// 미니게임 등에서 사용됩니다.
+        /// </summary>
+        public void SetPaused(bool paused)
+        {
+            SetInputEnabled(!paused);
+        }
+
         public bool IsInputEnabled => _inputEnabled;
+
+        /// <summary>
+        /// 케이크를 표시합니다.
+        /// </summary>
+        public void ShowCake()
+        {
+            if (cakeHolder != null)
+            {
+                cakeHolder.SetActive(true);
+                Debug.Log("[PlayerController] Cake is now visible!");
+            }
+        }
+
+        /// <summary>
+        /// 케이크를 숨깁니다.
+        /// </summary>
+        public void HideCake()
+        {
+            if (cakeHolder != null)
+            {
+                cakeHolder.SetActive(false);
+            }
+        }
 
         private void OnDrawGizmosSelected()
         {

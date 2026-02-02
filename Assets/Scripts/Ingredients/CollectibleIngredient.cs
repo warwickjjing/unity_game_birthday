@@ -1,16 +1,26 @@
 using UnityEngine;
+using BirthdayCakeQuest.Interaction;
+using BirthdayCakeQuest.MiniGames;
 
 namespace BirthdayCakeQuest.Ingredients
 {
     /// <summary>
     /// 월드에 배치되어 플레이어가 수집할 수 있는 재료 오브젝트입니다.
     /// Interactor가 범위 내에서 E키를 누르면 수집됩니다.
+    /// 미니게임이 설정된 경우 미니게임을 먼저 플레이해야 합니다.
     /// </summary>
     [RequireComponent(typeof(Collider))]
-    public sealed class CollectibleIngredient : MonoBehaviour
+    public sealed class CollectibleIngredient : MonoBehaviour, IInteractable
     {
         [Header("Ingredient Info")]
         [SerializeField] private IngredientId ingredientId;
+
+        [Header("Mini Game")]
+        [Tooltip("이 재료를 수집하기 위해 미니게임이 필요한가요?")]
+        [SerializeField] private bool requiresMiniGame = false;
+        
+        [Tooltip("재생할 미니게임 타입")]
+        [SerializeField] private MiniGameType miniGameType = MiniGameType.Sugar;
         
         [Header("Interaction")]
         [Tooltip("플레이어가 이 거리 안에 있을 때 수집 가능")]
@@ -27,6 +37,64 @@ namespace BirthdayCakeQuest.Ingredients
         public float InteractionRadius => interactionRadius;
 
         private bool _collected;
+
+        // IInteractable 구현
+        public bool CanInteract => !_collected;
+
+        public string GetInteractPrompt()
+        {
+            return $"Collect {ingredientId} [E]";
+        }
+
+        public void Interact(GameObject interactor)
+        {
+            Debug.Log($"[CollectibleIngredient] Interact called for {ingredientId}");
+            Debug.Log($"[CollectibleIngredient] Requires MiniGame: {requiresMiniGame}");
+            
+            if (requiresMiniGame)
+            {
+                Debug.Log($"[CollectibleIngredient] Starting mini game: {miniGameType}");
+                StartMiniGame();
+            }
+            else
+            {
+                Debug.Log($"[CollectibleIngredient] Direct collection");
+                TryCollect();
+            }
+        }
+
+        /// <summary>
+        /// 미니게임을 시작합니다.
+        /// </summary>
+        private void StartMiniGame()
+        {
+            var manager = MiniGameManager.Instance;
+            if (manager == null)
+            {
+                Debug.LogError("[CollectibleIngredient] MiniGameManager를 찾을 수 없습니다!");
+                return;
+            }
+
+            Debug.Log($"[CollectibleIngredient] {ingredientId} 미니게임 시작");
+
+            manager.StartMiniGame(miniGameType, (success) =>
+            {
+                if (success)
+                {
+                    Debug.Log($"[CollectibleIngredient] 미니게임 성공! {ingredientId} 수집");
+                    TryCollect();
+                }
+                else
+                {
+                    Debug.Log($"[CollectibleIngredient] 미니게임 실패. {ingredientId}를 얻지 못했습니다.");
+                }
+            });
+        }
+
+        public Transform GetTransform()
+        {
+            return transform;
+        }
 
         /// <summary>
         /// 이 재료를 수집합니다.
