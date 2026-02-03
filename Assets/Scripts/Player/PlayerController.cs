@@ -16,7 +16,7 @@ namespace BirthdayCakeQuest.Player
 
         [Header("Gravity")]
         [SerializeField] private float gravity = -9.81f;
-        [SerializeField] private float groundCheckDistance = 0.2f;
+        [SerializeField] private float groundCheckDistance = 0.5f; // 바닥 감지 거리 증가
         [SerializeField] private LayerMask groundMask = ~0;
 
         [Header("Animation")]
@@ -34,6 +34,32 @@ namespace BirthdayCakeQuest.Player
         private void Awake()
         {
             _controller = GetComponent<CharacterController>();
+            
+            // CharacterController 설정 확인 및 조정
+            if (_controller != null)
+            {
+                // Center가 너무 아래에 있으면 조정
+                if (_controller.center.y < 0.5f)
+                {
+                    Vector3 center = _controller.center;
+                    center.y = 0.9f; // 캐릭터 중심을 위로
+                    _controller.center = center;
+                }
+                
+                // Height가 너무 작으면 조정
+                if (_controller.height < 1.5f)
+                {
+                    _controller.height = 1.8f; // 캐릭터 높이
+                }
+                
+                // Skin Width 증가 (바닥과의 충돌 감지 개선)
+                if (_controller.skinWidth < 0.1f)
+                {
+                    _controller.skinWidth = 0.15f;
+                }
+                
+                Debug.Log($"[PlayerController] CharacterController 설정 - Center: {_controller.center}, Height: {_controller.height}, SkinWidth: {_controller.skinWidth}");
+            }
             
             // Animator 자동 검색 (VRM 모델은 자식 오브젝트에 있음)
             if (animator == null)
@@ -119,21 +145,43 @@ namespace BirthdayCakeQuest.Player
 
         private void ApplyGravity()
         {
-            // 바닥 체크
-            _isGrounded = Physics.Raycast(
-                transform.position,
-                Vector3.down,
-                groundCheckDistance,
-                groundMask
-            );
-
-            if (_isGrounded && _velocity.y < 0)
+            // CharacterController의 바닥 감지 사용
+            _isGrounded = _controller.isGrounded;
+            
+            // 추가 바닥 체크 (더 정확한 감지)
+            if (!_isGrounded)
             {
-                _velocity.y = -2f; // 바닥에 붙어있도록
+                // CharacterController의 바닥 체크
+                Vector3 rayStart = transform.position + _controller.center;
+                _isGrounded = Physics.Raycast(
+                    rayStart,
+                    Vector3.down,
+                    (_controller.height / 2f) + groundCheckDistance,
+                    groundMask
+                );
             }
 
-            // 중력 적용
-            _velocity.y += gravity * Time.deltaTime;
+            if (_isGrounded)
+            {
+                if (_velocity.y < 0)
+                {
+                    _velocity.y = -2f; // 바닥에 붙어있도록
+                }
+                
+                // 바닥 아래로 떨어지지 않도록 위치 보정
+                Vector3 currentPos = transform.position;
+                if (currentPos.y < 0.1f) // 바닥이 Y=0 근처라면
+                {
+                    currentPos.y = Mathf.Max(currentPos.y, 0.1f + (_controller.height / 2f));
+                    transform.position = currentPos;
+                }
+            }
+            else
+            {
+                // 중력 적용
+                _velocity.y += gravity * Time.deltaTime;
+            }
+            
             _controller.Move(_velocity * Time.deltaTime);
         }
 

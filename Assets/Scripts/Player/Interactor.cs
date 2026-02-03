@@ -65,27 +65,12 @@ namespace BirthdayCakeQuest.Player
                 interactionLayer
             );
 
-            // 디버그: 감지된 콜라이더 수 로그
-            if (hitCount > 0)
-            {
-                Debug.Log($"[Interactor] Found {hitCount} colliders in range");
-            }
-
             for (int i = 0; i < hitCount; i++)
             {
                 var interactable = _detectionBuffer[i].GetComponent<IInteractable>();
                 
-                if (interactable == null)
-                {
-                    Debug.Log($"[Interactor] {_detectionBuffer[i].name} has no IInteractable component");
+                if (interactable == null || !interactable.CanInteract)
                     continue;
-                }
-                
-                if (!interactable.CanInteract)
-                {
-                    Debug.Log($"[Interactor] {_detectionBuffer[i].name} CanInteract is false");
-                    continue;
-                }
 
                 Transform interactableTransform = interactable.GetTransform();
                 float distance = Vector3.Distance(transform.position, interactableTransform.position);
@@ -95,7 +80,6 @@ namespace BirthdayCakeQuest.Player
                 {
                     closestDistance = distance;
                     _nearestInteractable = interactable;
-                    Debug.Log($"[Interactor] Nearest interactable: {_detectionBuffer[i].name} at distance {distance:F2}m");
                 }
             }
         }
