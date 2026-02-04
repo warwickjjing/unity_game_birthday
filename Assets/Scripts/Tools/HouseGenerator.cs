@@ -25,8 +25,6 @@ namespace BirthdayCakeQuest.Tools
             GameObject house = new GameObject("House");
             house.transform.position = Vector3.zero;
 
-            Debug.Log("[HouseGenerator] 🏠 2룸 집 생성 시작...");
-
             // 거실을 중심(0, 0, 0)으로 배치
             // 방1, 방2는 위쪽에 배치
 
@@ -45,8 +43,6 @@ namespace BirthdayCakeQuest.Tools
             // 5. 가구 (소파, TV)
             CreateFurniture(house.transform);
 
-            Debug.Log("[HouseGenerator] ✅ 2룸 집 생성 완료!");
-
             return house;
         }
 
@@ -55,8 +51,6 @@ namespace BirthdayCakeQuest.Tools
         /// </summary>
         public static void PlaceIngredients(Transform houseRoot)
         {
-            Debug.Log("[HouseGenerator] 🍰 재료 배치 시작...");
-
             string[] ingredientPrefabs = new string[]
             {
                 "Assets/Prefabs/Ingredient_Flour.prefab",
@@ -85,7 +79,6 @@ namespace BirthdayCakeQuest.Tools
                     GameObject ingredient = UnityEditor.PrefabUtility.InstantiatePrefab(prefab) as GameObject;
                     ingredient.transform.position = positions[i];
                     ingredient.transform.SetParent(houseRoot);
-                    Debug.Log($"[HouseGenerator] 📍 {prefab.name} 배치: {positions[i]}");
                 }
                 else
                 {
@@ -93,8 +86,6 @@ namespace BirthdayCakeQuest.Tools
                 }
             }
 #endif
-
-            Debug.Log("[HouseGenerator] ✅ 재료 배치 완료!");
         }
 
         // ===========================================
@@ -144,8 +135,6 @@ namespace BirthdayCakeQuest.Tools
             Material counterMat = new Material(Shader.Find("Universal Render Pipeline/Lit"));
             counterMat.color = new Color(0.3f, 0.25f, 0.2f);
             counter.GetComponent<Renderer>().material = counterMat;
-
-            Debug.Log("[HouseGenerator] 🛋️ 거실 생성 완료");
         }
 
         // ===========================================
@@ -185,8 +174,6 @@ namespace BirthdayCakeQuest.Tools
 
             // 침대
             CreateBed(room.transform, new Vector3(0, 0.3f, 0));
-
-            Debug.Log("[HouseGenerator] 🛏️ 방1 생성 완료");
         }
 
         // ===========================================
@@ -224,8 +211,6 @@ namespace BirthdayCakeQuest.Tools
 
             // 침대
             CreateBed(room.transform, new Vector3(0, 0.3f, 0));
-
-            Debug.Log("[HouseGenerator] 🛏️ 방2 생성 완료");
         }
 
         // ===========================================
@@ -242,8 +227,6 @@ namespace BirthdayCakeQuest.Tools
             CreateFloor(hallway.transform, "Floor", Vector3.zero, new Vector3(2 * UNIT, 2 * UNIT));
 
             // 복도 양쪽 벽은 방들에서 이미 생성됨
-
-            Debug.Log("[HouseGenerator] 🚪 복도 생성 완료");
         }
 
         // ===========================================
@@ -310,8 +293,6 @@ namespace BirthdayCakeQuest.Tools
             Material screenMat = new Material(Shader.Find("Universal Render Pipeline/Lit"));
             screenMat.color = Color.black;
             screen.GetComponent<Renderer>().material = screenMat;
-
-            Debug.Log("[HouseGenerator] 🛋️📺 소파와 TV 배치 완료");
         }
 
         // ===========================================
@@ -425,8 +406,6 @@ namespace BirthdayCakeQuest.Tools
             {
                 doorRoot.layer = interactableLayer;
             }
-
-            Debug.Log($"[HouseGenerator] 🚪 {name} 생성 완료 (위치: {position})");
         }
     }
 }

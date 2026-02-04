@@ -6,7 +6,7 @@ namespace BirthdayCakeQuest.UI
 {
     /// <summary>
     /// 상호작용 가능한 오브젝트 위에 Floating UI 프롬프트를 표시합니다.
-    /// "E키로 열기" 같은 텍스트가 3D 공간에 떠다닙니다.
+    /// "F키로 열기" 같은 텍스트가 3D 공간에 떠다닙니다.
     /// </summary>
     [RequireComponent(typeof(IInteractable))]
     public class WorldSpaceInteractionPrompt : MonoBehaviour
@@ -75,7 +75,7 @@ namespace BirthdayCakeQuest.UI
             textObject.transform.localPosition = new Vector3(0, 0, -0.01f);
 
             _textMesh = textObject.AddComponent<TextMeshPro>();
-            _textMesh.text = "상호작용 [E]";
+            _textMesh.text = "상호작용 [F]";
             _textMesh.fontSize = fontSize;
             _textMesh.color = textColor;
             _textMesh.alignment = TextAlignmentOptions.Center;

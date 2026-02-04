@@ -100,8 +100,8 @@ CollectibleIngredient 설정:
 ### 6️⃣ 테스트!
 
 1. Play 버튼 클릭
-2. 설탕 재료로 이동
-3. E키 누르기
+2. 설탕 재료로 이동image.png
+3. F키 누르기
 4. 마우스 버튼 누르고 있기
 5. 게이지가 80-100% 사이에서 놓기
 6. 성공!
@@ -114,7 +114,7 @@ CollectibleIngredient 설정:
 - MiniGameCanvas가 비활성화되어 있는지 확인 (정상)
 - 게임 중에만 활성화됨
 
-### E키를 눌러도 미니게임이 안 열림
+### F키를 눌러도 미니게임이 안 열림
 - Ingredient_Sugar의 "Requires Mini Game" 체크 확인
 - MiniGameManager에 모든 참조 연결 확인
 

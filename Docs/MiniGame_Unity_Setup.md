@@ -292,12 +292,12 @@ Sugar 오브젝트에 Collider가 있는지 확인:
 ### 6.3 상호작용 테스트
 
 1. **플레이어를 Sugar 근처로 이동**
-   - "Collect Sugar [E]" 프롬프트가 표시되어야 함
+   - "Collect Sugar [F]" 프롬프트가 표시되어야 함
 
-2. **E키를 눌러 상호작용**
+2. **F키를 눌러 상호작용**
    ```
    Console 로그:
-   [Interactor] Interacting with: Collect Sugar [E]
+   [Interactor] Interacting with: Collect Sugar [F]
    [CollectibleIngredient] Interact called for Sugar
    [CollectibleIngredient] Requires MiniGame: True
    [CollectibleIngredient] Starting mini game: Sugar
@@ -325,7 +325,7 @@ Sugar 오브젝트에 Collider가 있는지 확인:
 - MiniGameManager에 Canvas가 연결되어 있는지 확인
 - Console에서 에러 메시지 확인
 
-**문제: E키를 눌러도 반응 없음**
+**문제: F키를 눌러도 반응 없음**
 - [상호작용 문제 해결 가이드](Troubleshooting_Interaction.md) 참고
 
 **문제: "MiniGameManager를 찾을 수 없습니다!" 에러**

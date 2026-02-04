@@ -4,7 +4,7 @@ using BirthdayCakeQuest.Interaction;
 namespace BirthdayCakeQuest.Interaction
 {
     /// <summary>
-    /// UBS 문을 E키 상호작용 시스템에 연결하는 래퍼 스크립트입니다.
+    /// UBS 문을 F키 상호작용 시스템에 연결하는 래퍼 스크립트입니다.
     /// UBS_Operator 또는 UBS_Actuator와 함께 사용합니다.
     /// </summary>
     [RequireComponent(typeof(BoxCollider))]
@@ -30,9 +30,9 @@ namespace BirthdayCakeQuest.Interaction
             if (ubsActuator != null)
             {
                 // UBS_Actuator의 binaryState로 열림/닫힘 상태 확인
-                return ubsActuator.binaryState ? "Close Door [E]" : "Open Door [E]";
+                return ubsActuator.binaryState ? "Close Door [F]" : "Open Door [F]";
             }
-            return "Operate [E]";
+            return "Operate [F]";
         }
 
         public Transform GetTransform()

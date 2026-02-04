@@ -6,7 +6,7 @@ namespace BirthdayCakeQuest.Ingredients
 {
     /// <summary>
     /// 월드에 배치되어 플레이어가 수집할 수 있는 재료 오브젝트입니다.
-    /// Interactor가 범위 내에서 E키를 누르면 수집됩니다.
+    /// Interactor가 범위 내에서 F키를 누르면 수집됩니다.
     /// 미니게임이 설정된 경우 미니게임을 먼저 플레이해야 합니다.
     /// </summary>
     [RequireComponent(typeof(Collider))]
@@ -43,7 +43,7 @@ namespace BirthdayCakeQuest.Ingredients
 
         public string GetInteractPrompt()
         {
-            return $"Collect {ingredientId} [E]";
+            return $"Collect {ingredientId} [F]";
         }
 
         public void Interact(GameObject interactor)

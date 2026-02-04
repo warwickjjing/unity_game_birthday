@@ -53,6 +53,9 @@ namespace BirthdayCakeQuest.Camera
         [Tooltip("지붕 투명도 (0=완전 투명, 1=불투명)")]
         [SerializeField] private float roofTransparency = 0.3f;
         
+        [Tooltip("완전히 안보이게 할지 여부 (true=invisible, false=투명)")]
+        [SerializeField] private bool makeRoofsInvisible = true;
+        
         [Tooltip("집 내부 영역 (플레이어가 이 영역 안에 있으면 지붕 투명화 유지)")]
         [SerializeField] private bool useInteriorBounds = true;
         
@@ -65,12 +68,31 @@ namespace BirthdayCakeQuest.Camera
         [Tooltip("집 내부 영역 자동 감지 (Floor 오브젝트의 Bounds 사용)")]
         [SerializeField] private bool autoDetectInteriorBounds = true;
 
+        [Header("Wall Transparency")]
+        [Tooltip("벽 투명화 사용 여부")]
+        [SerializeField] private bool useWallTransparency = true;
+        
+        [Tooltip("벽 레이어 (계단 등은 제외)")]
+        [SerializeField] private LayerMask wallLayer = 0;
+        
+        [Tooltip("완전히 안보이게 할지 여부 (true=invisible, false=투명)")]
+        [SerializeField] private bool makeWallsInvisible = true;
+        
+        [Tooltip("벽 투명도 (0=완전 투명, 1=불투명, makeWallsInvisible=false일 때만 사용)")]
+        [SerializeField] private float wallTransparency = 0.3f;
+
         private Vector3 _currentVelocity;
         private bool _isPaused = false;
         private Dictionary<Renderer, Material[]> _originalMaterials = new Dictionary<Renderer, Material[]>();
         private Dictionary<Renderer, Material[]> _transparentMaterials = new Dictionary<Renderer, Material[]>();
         private List<Renderer> _allRoofRenderers = new List<Renderer>(); // Scene의 모든 지붕 Renderer
         private bool _roofRenderersInitialized = false;
+        private HashSet<Renderer> _hiddenRoofRenderers = new HashSet<Renderer>(); // invisible로 숨긴 지붕들
+        
+        // 벽 투명화용 별도 Dictionary (지붕과 분리)
+        private Dictionary<Renderer, Material[]> _originalWallMaterials = new Dictionary<Renderer, Material[]>();
+        private Dictionary<Renderer, Material[]> _transparentWallMaterials = new Dictionary<Renderer, Material[]>();
+        private HashSet<Renderer> _hiddenWallRenderers = new HashSet<Renderer>(); // invisible로 숨긴 벽들
 
         private void Start()
         {
@@ -172,7 +194,6 @@ namespace BirthdayCakeQuest.Camera
                     // Y축은 약간 여유있게
                     interiorMin.y = Mathf.Min(interiorMin.y, 0f);
                     interiorMax.y = Mathf.Max(interiorMax.y, 10f);
-                    Debug.Log($"[IsometricFollowCamera] 집 내부 영역 자동 감지 완료: Min={interiorMin}, Max={interiorMax}");
                 }
             }
             else
@@ -186,7 +207,6 @@ namespace BirthdayCakeQuest.Camera
                     // Y축은 약간 여유있게
                     interiorMin.y = Mathf.Min(interiorMin.y, 0f);
                     interiorMax.y = Mathf.Max(interiorMax.y, 10f);
-                    Debug.Log($"[IsometricFollowCamera] Floor 기반 집 내부 영역 자동 감지 완료: Min={interiorMin}, Max={interiorMax}");
                 }
             }
         }
@@ -216,7 +236,6 @@ namespace BirthdayCakeQuest.Camera
             }
             
             _roofRenderersInitialized = true;
-            Debug.Log($"[IsometricFollowCamera] 지붕 Renderer {_allRoofRenderers.Count}개 초기화 완료");
         }
 
         private void LateUpdate()
@@ -227,6 +246,7 @@ namespace BirthdayCakeQuest.Camera
             UpdateCameraPosition();
             UpdateCameraRotation();
             UpdateRoofTransparency();
+            UpdateWallTransparency();
         }
 
         /// <summary>
@@ -333,10 +353,6 @@ namespace BirthdayCakeQuest.Camera
         {
             if (!useRoofTransparency || target == null || roofLayer == 0)
             {
-                if (Time.frameCount % 300 == 0)
-                {
-                    Debug.Log($"[IsometricFollowCamera] 지붕 투명화 비활성화 - useRoofTransparency: {useRoofTransparency}, target: {target != null}, roofLayer: {roofLayer}");
-                }
                 return;
             }
 
@@ -355,20 +371,6 @@ namespace BirthdayCakeQuest.Camera
                 isInsideInterior = playerPos.x >= interiorMin.x && playerPos.x <= interiorMax.x &&
                                   playerPos.y >= interiorMin.y && playerPos.y <= interiorMax.y &&
                                   playerPos.z >= interiorMin.z && playerPos.z <= interiorMax.z;
-                
-                // 디버그 로그 (주기적으로)
-                if (Time.frameCount % 60 == 0)
-                {
-                    Debug.Log($"[IsometricFollowCamera] 집 내부 판단 - 위치: {playerPos}, 범위: [{interiorMin}, {interiorMax}], 결과: {(isInsideInterior ? "안" : "밖")}");
-                }
-            }
-            else
-            {
-                // useInteriorBounds가 false면 항상 레이캐스트 방식만 사용
-                if (Time.frameCount % 60 == 0)
-                {
-                    Debug.Log($"[IsometricFollowCamera] 집 내부 영역 감지 비활성화 - 레이캐스트 방식만 사용");
-                }
             }
             
             // 집 안에 있으면 모든 지붕을 투명하게, 밖에 있으면 레이캐스트로 감지된 것만
@@ -379,15 +381,11 @@ namespace BirthdayCakeQuest.Camera
                 // 집 안에 있으면 모든 지붕을 투명하게
                 foreach (Renderer renderer in _allRoofRenderers)
                 {
-                    if (renderer != null && renderer.enabled)
+                    if (renderer != null)
                     {
+                        // enabled 상태와 관계없이 추가 (이미 숨겨진 것도 포함)
                         currentRoofRenderers.Add(renderer);
                     }
-                }
-                
-                if (Time.frameCount % 60 == 0)
-                {
-                    Debug.Log($"[IsometricFollowCamera] 집 안에 있음 - 모든 지붕 {currentRoofRenderers.Count}개 투명화 (플레이어 위치: {playerPos})");
                 }
             }
             else
@@ -405,156 +403,399 @@ namespace BirthdayCakeQuest.Camera
                 foreach (RaycastHit hit in hits)
                 {
                     Renderer renderer = hit.collider.GetComponent<Renderer>();
-                    if (renderer != null && renderer.enabled && hit.point.y > playerPos.y + 0.5f)
+                    if (renderer != null && hit.point.y > playerPos.y + 0.5f)
                     {
+                        // enabled 상태와 관계없이 추가 (이미 숨겨진 것도 포함)
                         currentRoofRenderers.Add(renderer);
                     }
                 }
                 
-                if (Time.frameCount % 60 == 0)
-                {
-                    Debug.Log($"[IsometricFollowCamera] 집 밖에 있음 - 레이캐스트로 {currentRoofRenderers.Count}개 감지 (플레이어 위치: {playerPos})");
-                }
             }
             
-            // currentRoofRenderers에 있는 모든 Renderer를 투명하게 처리
-            foreach (Renderer renderer in currentRoofRenderers)
+            // currentRoofRenderers에 있는 모든 Renderer를 처리
+            if (makeRoofsInvisible)
             {
-                if (renderer != null && renderer.enabled)
+                // 완전히 안보이게 (Renderer.enabled = false)
+                foreach (Renderer renderer in currentRoofRenderers)
                 {
-                    // Mesh Renderer의 모든 Material 처리
-                    Material[] originalMats = renderer.sharedMaterials;
-                    
-                    // 원본 Materials 저장
-                    if (!_originalMaterials.ContainsKey(renderer))
+                    if (renderer != null)
                     {
-                        _originalMaterials[renderer] = originalMats;
-                    }
-                    
-                    // 투명 Materials 생성 (없으면)
-                    if (!_transparentMaterials.ContainsKey(renderer))
-                    {
-                        Material[] transparentMats = new Material[originalMats.Length];
-                        
-                        for (int i = 0; i < originalMats.Length; i++)
+                        // 이미 숨겨진 것은 건너뛰기 (깜빡임 방지)
+                        if (!_hiddenRoofRenderers.Contains(renderer))
                         {
-                            Material originalMat = originalMats[i];
-                            Material transparentMat = new Material(originalMat);
-                            
-                            // URP Lit Shader 투명화
-                            bool isURP = transparentMat.shader.name.Contains("Universal Render Pipeline") || 
-                                        transparentMat.shader.name.Contains("URP") ||
-                                        transparentMat.shader.name.Contains("Universal");
-                            
-                            if (isURP)
-                            {
-                                // URP Lit Shader의 경우 - 모든 투명화 설정
-                                transparentMat.SetFloat("_Surface", 1); // 1 = Transparent
-                                transparentMat.SetFloat("_Blend", 0); // 0 = Alpha
-                                
-                                // Base Color Alpha 설정
-                                if (transparentMat.HasProperty("_BaseColor"))
-                                {
-                                    Color baseColor = transparentMat.GetColor("_BaseColor");
-                                    baseColor.a = roofTransparency;
-                                    transparentMat.SetColor("_BaseColor", baseColor);
-                                }
-                                
-                                // Blend Mode 설정 (Alpha Blend)
-                                transparentMat.SetFloat("_SrcBlend", (float)UnityEngine.Rendering.BlendMode.SrcAlpha);
-                                transparentMat.SetFloat("_DstBlend", (float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-                                
-                                // ZWrite 비활성화
-                                transparentMat.SetFloat("_ZWrite", 0);
-                                
-                                // RenderType 태그
-                                transparentMat.SetOverrideTag("RenderType", "Transparent");
-                                
-                                // Render Queue를 Transparent로
-                                transparentMat.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
-                                
-                                // 모든 키워드 비활성화 후 필요한 것만 활성화
-                                transparentMat.DisableKeyword("_SURFACE_TYPE_OPAQUE");
-                                transparentMat.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
-                                transparentMat.DisableKeyword("_BLEND_PREMULTIPLY");
-                                transparentMat.DisableKeyword("_BLEND_ADD");
-                                transparentMat.DisableKeyword("_BLEND_MULTIPLY");
-                                transparentMat.EnableKeyword("_BLEND_ALPHA");
-                                transparentMat.DisableKeyword("_ALPHATEST_ON");
-                                transparentMat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
-                                
-                                // Material 속성 강제 업데이트
-                                transparentMat.SetFloat("_Surface", 1);
-                                transparentMat.SetFloat("_Blend", 0);
-                            }
-                            else
-                            {
-                                // Built-in Standard Shader
-                                transparentMat.SetFloat("_Mode", 3);
-                                if (transparentMat.HasProperty("_Color"))
-                                {
-                                    Color color = transparentMat.color;
-                                    color.a = roofTransparency;
-                                    transparentMat.color = color;
-                                }
-                                transparentMat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
-                                transparentMat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
-                                transparentMat.SetInt("_ZWrite", 0);
-                                transparentMat.renderQueue = 3000;
-                                transparentMat.DisableKeyword("_ALPHATEST_ON");
-                                transparentMat.EnableKeyword("_ALPHABLEND_ON");
-                                transparentMat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
-                            }
-                            
-                            transparentMats[i] = transparentMat;
-                        }
-                        
-                        _transparentMaterials[renderer] = transparentMats;
-                        
-                        if (Time.frameCount % 60 == 0)
-                        {
-                            Debug.Log($"[IsometricFollowCamera] {renderer.name} 투명 Material {transparentMats.Length}개 생성");
-                            for (int i = 0; i < transparentMats.Length; i++)
-                            {
-                                Material mat = transparentMats[i];
-                                Color color = mat.HasProperty("_BaseColor") ? mat.GetColor("_BaseColor") : mat.color;
-                                float surface = mat.HasProperty("_Surface") ? mat.GetFloat("_Surface") : -1;
-                                Debug.Log($"  Material[{i}]: Shader={mat.shader.name}, Surface={surface}, Alpha={color.a:F2}, Queue={mat.renderQueue}");
-                            }
+                            renderer.enabled = false;
+                            _hiddenRoofRenderers.Add(renderer);
                         }
                     }
-                    
-                    // 투명 Materials 적용 (모든 Material 배열 적용)
-                    renderer.materials = _transparentMaterials[renderer];
-                    
-                    // Material이 제대로 적용되었는지 확인
-                    if (Time.frameCount % 60 == 0 && renderer.materials.Length > 0)
+                }
+            }
+            else
+            {
+                // 투명하게 처리 (기존 로직)
+                foreach (Renderer renderer in currentRoofRenderers)
+                {
+                    if (renderer != null && renderer.enabled)
                     {
-                        Material firstMat = renderer.materials[0];
-                        Color currentColor = firstMat.HasProperty("_BaseColor") 
-                            ? firstMat.GetColor("_BaseColor") 
-                            : firstMat.color;
-                        float surface = firstMat.HasProperty("_Surface") ? firstMat.GetFloat("_Surface") : -1;
-                        Debug.Log($"[IsometricFollowCamera] {renderer.name} Material {renderer.materials.Length}개 적용됨 - Surface: {surface}, Alpha: {currentColor.a:F2}, Queue: {firstMat.renderQueue}");
+                        // Mesh Renderer의 모든 Material 처리
+                        Material[] originalMats = renderer.sharedMaterials;
+                        
+                        // 원본 Materials 저장
+                        if (!_originalMaterials.ContainsKey(renderer))
+                        {
+                            _originalMaterials[renderer] = originalMats;
+                        }
+                        
+                        // 투명 Materials 생성 (없으면)
+                        if (!_transparentMaterials.ContainsKey(renderer))
+                        {
+                            Material[] transparentMats = new Material[originalMats.Length];
+                            
+                            for (int i = 0; i < originalMats.Length; i++)
+                            {
+                                Material originalMat = originalMats[i];
+                                Material transparentMat = new Material(originalMat);
+                                
+                                // URP Lit Shader 투명화
+                                bool isURP = transparentMat.shader.name.Contains("Universal Render Pipeline") || 
+                                            transparentMat.shader.name.Contains("URP") ||
+                                            transparentMat.shader.name.Contains("Universal");
+                                
+                                if (isURP)
+                                {
+                                    // URP Lit Shader의 경우 - 모든 투명화 설정
+                                    transparentMat.SetFloat("_Surface", 1); // 1 = Transparent
+                                    transparentMat.SetFloat("_Blend", 0); // 0 = Alpha
+                                    
+                                    // Base Color Alpha 설정
+                                    if (transparentMat.HasProperty("_BaseColor"))
+                                    {
+                                        Color baseColor = transparentMat.GetColor("_BaseColor");
+                                        baseColor.a = roofTransparency;
+                                        transparentMat.SetColor("_BaseColor", baseColor);
+                                    }
+                                    
+                                    // Blend Mode 설정 (Alpha Blend)
+                                    transparentMat.SetFloat("_SrcBlend", (float)UnityEngine.Rendering.BlendMode.SrcAlpha);
+                                    transparentMat.SetFloat("_DstBlend", (float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+                                    
+                                    // ZWrite 비활성화
+                                    transparentMat.SetFloat("_ZWrite", 0);
+                                    
+                                    // RenderType 태그
+                                    transparentMat.SetOverrideTag("RenderType", "Transparent");
+                                    
+                                    // Render Queue를 Transparent로
+                                    transparentMat.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+                                    
+                                    // 모든 키워드 비활성화 후 필요한 것만 활성화
+                                    transparentMat.DisableKeyword("_SURFACE_TYPE_OPAQUE");
+                                    transparentMat.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+                                    transparentMat.DisableKeyword("_BLEND_PREMULTIPLY");
+                                    transparentMat.DisableKeyword("_BLEND_ADD");
+                                    transparentMat.DisableKeyword("_BLEND_MULTIPLY");
+                                    transparentMat.EnableKeyword("_BLEND_ALPHA");
+                                    transparentMat.DisableKeyword("_ALPHATEST_ON");
+                                    transparentMat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+                                    
+                                    // Material 속성 강제 업데이트
+                                    transparentMat.SetFloat("_Surface", 1);
+                                    transparentMat.SetFloat("_Blend", 0);
+                                }
+                                else
+                                {
+                                    // Built-in Standard Shader
+                                    transparentMat.SetFloat("_Mode", 3);
+                                    if (transparentMat.HasProperty("_Color"))
+                                    {
+                                        Color color = transparentMat.color;
+                                        color.a = roofTransparency;
+                                        transparentMat.color = color;
+                                    }
+                                    transparentMat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+                                    transparentMat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+                                    transparentMat.SetInt("_ZWrite", 0);
+                                    transparentMat.renderQueue = 3000;
+                                    transparentMat.DisableKeyword("_ALPHATEST_ON");
+                                    transparentMat.EnableKeyword("_ALPHABLEND_ON");
+                                    transparentMat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+                                }
+                                
+                                transparentMats[i] = transparentMat;
+                            }
+                            
+                            _transparentMaterials[renderer] = transparentMats;
+                        }
+                        
+                        // 투명 Materials 적용 (모든 Material 배열 적용)
+                        renderer.materials = _transparentMaterials[renderer];
                     }
                 }
             }
             
-            // 이전 프레임에서 투명했지만 이번 프레임에서는 감지되지 않은 지붕 복원
-            List<Renderer> toRestore = new List<Renderer>();
-            foreach (var kvp in _transparentMaterials)
+            // 이전 프레임에서 처리했지만 이번 프레임에서는 감지되지 않은 지붕 복원
+            if (makeRoofsInvisible)
             {
-                if (!currentRoofRenderers.Contains(kvp.Key))
+                // invisible로 숨긴 지붕들 복원
+                List<Renderer> toRestore = new List<Renderer>();
+                foreach (Renderer renderer in _hiddenRoofRenderers)
                 {
-                    toRestore.Add(kvp.Key);
+                    // currentRoofRenderers에 없으면 복원 대상
+                    if (!currentRoofRenderers.Contains(renderer))
+                    {
+                        toRestore.Add(renderer);
+                    }
+                }
+
+                foreach (Renderer renderer in toRestore)
+                {
+                    if (renderer != null)
+                    {
+                        renderer.enabled = true;
+                        _hiddenRoofRenderers.Remove(renderer);
+                    }
                 }
             }
-            
-            foreach (Renderer renderer in toRestore)
+            else
             {
-                if (_originalMaterials.ContainsKey(renderer))
+                // 투명 Material 복원
+                List<Renderer> toRestore = new List<Renderer>();
+                foreach (var kvp in _transparentMaterials)
                 {
-                    renderer.materials = _originalMaterials[renderer];
+                    if (!currentRoofRenderers.Contains(kvp.Key))
+                    {
+                        toRestore.Add(kvp.Key);
+                    }
+                }
+                
+                foreach (Renderer renderer in toRestore)
+                {
+                    if (_originalMaterials.ContainsKey(renderer))
+                    {
+                        renderer.materials = _originalMaterials[renderer];
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// 카메라와 플레이어 사이에 벽이 있으면 투명하게 만들거나 완전히 숨깁니다.
+        /// </summary>
+        private void UpdateWallTransparency()
+        {
+            if (!useWallTransparency || target == null || wallLayer == 0)
+            {
+                // 비활성화 시 모든 벽 복원
+                RestoreAllWalls();
+                return;
+            }
+
+            Vector3 cameraPos = transform.position;
+            Vector3 playerPos = target.position;
+            Vector3 direction = (playerPos - cameraPos).normalized;
+            float distance = Vector3.Distance(cameraPos, playerPos);
+
+            // 카메라에서 플레이어로 레이캐스트 (모든 벽 감지)
+            RaycastHit[] hits = Physics.RaycastAll(
+                cameraPos,
+                direction,
+                distance,
+                wallLayer,
+                QueryTriggerInteraction.Ignore
+            );
+
+            // 현재 프레임에서 감지된 벽 Renderer들
+            HashSet<Renderer> currentWallRenderers = new HashSet<Renderer>();
+
+            foreach (RaycastHit hit in hits)
+            {
+                Renderer renderer = hit.collider.GetComponent<Renderer>();
+                if (renderer != null)
+                {
+                    currentWallRenderers.Add(renderer);
+                }
+            }
+
+            // currentWallRenderers에 있는 모든 Renderer를 처리
+            if (makeWallsInvisible)
+            {
+                // 완전히 안보이게 (Renderer.enabled = false)
+                foreach (Renderer renderer in currentWallRenderers)
+                {
+                    if (renderer != null && renderer.enabled)
+                    {
+                        renderer.enabled = false;
+                        _hiddenWallRenderers.Add(renderer);
+                    }
+                }
+            }
+            else
+            {
+                // 투명하게 처리 (기존 로직)
+                foreach (Renderer renderer in currentWallRenderers)
+                {
+                    if (renderer != null && renderer.enabled)
+                    {
+                        // Mesh Renderer의 모든 Material 처리
+                        Material[] originalMats = renderer.sharedMaterials;
+
+                        // 원본 Materials 저장
+                        if (!_originalWallMaterials.ContainsKey(renderer))
+                        {
+                            _originalWallMaterials[renderer] = originalMats;
+                        }
+
+                        // 투명 Materials 생성 (없으면)
+                        if (!_transparentWallMaterials.ContainsKey(renderer))
+                        {
+                            Material[] transparentMats = new Material[originalMats.Length];
+
+                            for (int i = 0; i < originalMats.Length; i++)
+                            {
+                                Material originalMat = originalMats[i];
+                                Material transparentMat = new Material(originalMat);
+
+                                // URP Lit Shader 투명화
+                                bool isURP = transparentMat.shader.name.Contains("Universal Render Pipeline") ||
+                                            transparentMat.shader.name.Contains("URP") ||
+                                            transparentMat.shader.name.Contains("Universal");
+
+                                if (isURP)
+                                {
+                                    // URP Lit Shader의 경우 - 모든 투명화 설정
+                                    transparentMat.SetFloat("_Surface", 1); // 1 = Transparent
+                                    transparentMat.SetFloat("_Blend", 0); // 0 = Alpha
+
+                                    // Base Color Alpha 설정
+                                    if (transparentMat.HasProperty("_BaseColor"))
+                                    {
+                                        Color baseColor = transparentMat.GetColor("_BaseColor");
+                                        baseColor.a = wallTransparency;
+                                        transparentMat.SetColor("_BaseColor", baseColor);
+                                    }
+
+                                    // Blend Mode 설정 (Alpha Blend)
+                                    transparentMat.SetFloat("_SrcBlend", (float)UnityEngine.Rendering.BlendMode.SrcAlpha);
+                                    transparentMat.SetFloat("_DstBlend", (float)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+
+                                    // ZWrite 비활성화
+                                    transparentMat.SetFloat("_ZWrite", 0);
+
+                                    // RenderType 태그
+                                    transparentMat.SetOverrideTag("RenderType", "Transparent");
+
+                                    // Render Queue를 Transparent로
+                                    transparentMat.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+
+                                    // 모든 키워드 비활성화 후 필요한 것만 활성화
+                                    transparentMat.DisableKeyword("_SURFACE_TYPE_OPAQUE");
+                                    transparentMat.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+                                    transparentMat.DisableKeyword("_BLEND_PREMULTIPLY");
+                                    transparentMat.DisableKeyword("_BLEND_ADD");
+                                    transparentMat.DisableKeyword("_BLEND_MULTIPLY");
+                                    transparentMat.EnableKeyword("_BLEND_ALPHA");
+                                    transparentMat.DisableKeyword("_ALPHATEST_ON");
+                                    transparentMat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+
+                                    // Material 속성 강제 업데이트
+                                    transparentMat.SetFloat("_Surface", 1);
+                                    transparentMat.SetFloat("_Blend", 0);
+                                }
+                                else
+                                {
+                                    // Built-in Standard Shader
+                                    transparentMat.SetFloat("_Mode", 3);
+                                    if (transparentMat.HasProperty("_Color"))
+                                    {
+                                        Color color = transparentMat.color;
+                                        color.a = wallTransparency;
+                                        transparentMat.color = color;
+                                    }
+                                    transparentMat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+                                    transparentMat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+                                    transparentMat.SetInt("_ZWrite", 0);
+                                    transparentMat.renderQueue = 3000;
+                                    transparentMat.DisableKeyword("_ALPHATEST_ON");
+                                    transparentMat.EnableKeyword("_ALPHABLEND_ON");
+                                    transparentMat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+                                }
+
+                                transparentMats[i] = transparentMat;
+                            }
+
+                            _transparentWallMaterials[renderer] = transparentMats;
+                        }
+
+                        // 투명 Materials 적용 (모든 Material 배열 적용)
+                        renderer.materials = _transparentWallMaterials[renderer];
+                    }
+                }
+            }
+
+            // 이전 프레임에서 처리했지만 이번 프레임에서는 감지되지 않은 벽 복원
+            if (makeWallsInvisible)
+            {
+                // invisible로 숨긴 벽들 복원
+                List<Renderer> toRestore = new List<Renderer>();
+                foreach (Renderer renderer in _hiddenWallRenderers)
+                {
+                    if (!currentWallRenderers.Contains(renderer))
+                    {
+                        toRestore.Add(renderer);
+                    }
+                }
+
+                foreach (Renderer renderer in toRestore)
+                {
+                    if (renderer != null)
+                    {
+                        renderer.enabled = true;
+                        _hiddenWallRenderers.Remove(renderer);
+                    }
+                }
+            }
+            else
+            {
+                // 투명 Material 복원
+                List<Renderer> toRestore = new List<Renderer>();
+                foreach (var kvp in _transparentWallMaterials)
+                {
+                    if (!currentWallRenderers.Contains(kvp.Key))
+                    {
+                        toRestore.Add(kvp.Key);
+                    }
+                }
+
+                foreach (Renderer renderer in toRestore)
+                {
+                    if (_originalWallMaterials.ContainsKey(renderer))
+                    {
+                        renderer.materials = _originalWallMaterials[renderer];
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// 모든 벽을 복원합니다 (비활성화 시 호출).
+        /// </summary>
+        private void RestoreAllWalls()
+        {
+            // invisible로 숨긴 벽들 복원
+            foreach (Renderer renderer in _hiddenWallRenderers)
+            {
+                if (renderer != null)
+                {
+                    renderer.enabled = true;
+                }
+            }
+            _hiddenWallRenderers.Clear();
+
+            // 투명 Material 복원
+            foreach (var kvp in _transparentWallMaterials)
+            {
+                if (_originalWallMaterials.ContainsKey(kvp.Key))
+                {
+                    kvp.Key.materials = _originalWallMaterials[kvp.Key];
                 }
             }
         }

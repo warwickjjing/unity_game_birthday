@@ -6,7 +6,7 @@ namespace BirthdayCakeQuest.Player
 {
     /// <summary>
     /// 플레이어 근처의 상호작용 가능한 오브젝트와 상호작용합니다.
-    /// E키를 눌러 재료를 수집하거나 다른 오브젝트와 상호작용할 수 있습니다.
+    /// F키를 눌러 재료를 수집하거나 다른 오브젝트와 상호작용할 수 있습니다.
     /// </summary>
     public sealed class Interactor : MonoBehaviour
     {
@@ -18,7 +18,7 @@ namespace BirthdayCakeQuest.Player
         [SerializeField] private LayerMask interactionLayer = ~0;
 
         [Header("Input")]
-        [SerializeField] private KeyCode interactKey = KeyCode.E;
+        [SerializeField] private KeyCode interactKey = KeyCode.F;
 
         [Header("UI Feedback (Optional)")]
         [Tooltip("상호작용 가능할 때 표시할 UI")]
@@ -89,9 +89,10 @@ namespace BirthdayCakeQuest.Player
             if (_nearestInteractable == null)
                 return;
 
-            if (Input.GetKeyDown(interactKey))
+            // F키와 E키 모두 확인 (호환성)
+            if (Input.GetKeyDown(interactKey) || Input.GetKeyDown(KeyCode.E))
             {
-                Debug.Log($"[Interactor] Interacting with: {_nearestInteractable.GetInteractPrompt()}");
+                Debug.Log($"[Interactor] 상호작용 키 입력 감지 ({interactKey}) - 상호작용 시작: {_nearestInteractable.GetInteractPrompt()}");
                 _nearestInteractable.Interact(gameObject);
             }
         }

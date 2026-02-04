@@ -19,7 +19,7 @@ namespace BirthdayCakeQuest.Interaction
 
         [Header("Settings")]
         [Tooltip("상호작용 프롬프트 텍스트")]
-        [SerializeField] private string interactPrompt = "소파에 앉기 [E]";
+        [SerializeField] private string interactPrompt = "소파에 앉기 [F]";
 
         [Tooltip("재료 미완성 시 프롬프트")]
         [SerializeField] private string incompletePrompt = "케이크를 완성하세요";

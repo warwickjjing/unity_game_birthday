@@ -5,7 +5,7 @@ namespace BirthdayCakeQuest.Props
 {
     /// <summary>
     /// 플레이어가 상호작용할 수 있는 문입니다.
-    /// E키로 열고 닫을 수 있습니다.
+    /// F키로 열고 닫을 수 있습니다.
     /// </summary>
     public class Door : MonoBehaviour, IInteractable
     {
@@ -48,14 +48,25 @@ namespace BirthdayCakeQuest.Props
         private float _autoCloseTimer;
         private BoxCollider _doorCollider; // 문 충돌 제어용
 
-        public bool CanInteract => !_isAnimating;
+        public bool CanInteract
+        {
+            get
+            {
+                bool canInteract = !_isAnimating;
+                if (!canInteract)
+                {
+                    Debug.Log($"[Door] {name} 상호작용 불가 - 애니메이션 중: {_isAnimating}");
+                }
+                return canInteract;
+            }
+        }
 
         public string GetInteractPrompt()
         {
             if (isLocked)
                 return lockedMessage;
 
-            return _isOpen ? "Close Door [E]" : "Open Door [E]";
+            return _isOpen ? "Close Door [F]" : "Open Door [F]";
         }
 
         public Transform GetTransform()
@@ -93,7 +104,6 @@ namespace BirthdayCakeQuest.Props
 
             // 초기 상태: 문이 닫혀있으므로 물리적으로 막음 (isTrigger = false)
             _doorCollider.isTrigger = false;
-            Debug.Log($"[Door] {name} 초기화: 닫힌 상태 (충돌 활성)");
 
             // 자식 오브젝트의 Collider 제거 (문짝, 손잡이 등)
             // DoorPivot은 제외 (구조적 필요)
@@ -104,7 +114,6 @@ namespace BirthdayCakeQuest.Props
                     Collider childCollider = child.GetComponent<Collider>();
                     if (childCollider != null)
                     {
-                        Debug.Log($"[Door] {child.name}의 Collider 제거 (물리 충돌 방지)");
                         Destroy(childCollider);
                     }
                 }
@@ -136,19 +145,23 @@ namespace BirthdayCakeQuest.Props
 
         public void Interact(GameObject interactor)
         {
+            Debug.Log($"[Door] Interact 호출됨 - {name}, Locked: {isLocked}, IsOpen: {_isOpen}, IsAnimating: {_isAnimating}");
+            
             if (isLocked)
             {
-                Debug.Log($"[Door] 문이 잠겨있습니다!");
+                Debug.Log($"[Door] {name}은(는) 잠겨있습니다.");
                 PlaySound(lockedSound);
                 return;
             }
 
             if (_isOpen)
             {
+                Debug.Log($"[Door] {name} 닫기");
                 CloseDoor();
             }
             else
             {
+                Debug.Log($"[Door] {name} 열기");
                 OpenDoor();
             }
         }
@@ -161,7 +174,6 @@ namespace BirthdayCakeQuest.Props
             if (_isOpen || _isAnimating)
                 return;
 
-            Debug.Log("[Door] 문 열기");
             _isOpen = true;
             _isAnimating = true;
             _targetAngle = openAngle;
@@ -171,7 +183,6 @@ namespace BirthdayCakeQuest.Props
             if (_doorCollider != null)
             {
                 _doorCollider.isTrigger = true;
-                Debug.Log("[Door] Collider를 Trigger로 변경 (통과 가능)");
             }
 
             PlaySound(openSound);
@@ -185,7 +196,6 @@ namespace BirthdayCakeQuest.Props
             if (!_isOpen || _isAnimating)
                 return;
 
-            Debug.Log("[Door] 문 닫기");
             _isOpen = false;
             _isAnimating = true;
             _targetAngle = closedAngle;
@@ -194,7 +204,6 @@ namespace BirthdayCakeQuest.Props
             if (_doorCollider != null)
             {
                 _doorCollider.isTrigger = false;
-                Debug.Log("[Door] Collider를 일반으로 변경 (통과 불가)");
             }
 
             PlaySound(closeSound);
@@ -206,7 +215,6 @@ namespace BirthdayCakeQuest.Props
         public void SetLocked(bool locked)
         {
             isLocked = locked;
-            Debug.Log($"[Door] 문이 {(locked ? "잠김" : "열림")} 상태로 변경되었습니다.");
         }
 
         /// <summary>
@@ -231,7 +239,6 @@ namespace BirthdayCakeQuest.Props
             {
                 doorPivot.localRotation = targetRotation;
                 _isAnimating = false;
-                Debug.Log($"[Door] 문이 {(_isOpen ? "열렸" : "닫혔")}습니다.");
             }
         }
 
