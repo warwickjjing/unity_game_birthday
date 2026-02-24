@@ -54,9 +54,40 @@ namespace BirthdayCakeQuest.Interaction
             // UBS_Operator가 있으면 Operator를 통해 제어
             else if (ubsOperator != null)
             {
-                // UBS_Operator의 triggered 플래그를 활성화하여 작동시킴
-                ubsOperator.triggered = true;
-                Debug.Log($"[UBSDoorInteractable] Door operated via UBS_Operator");
+                // UBS_Operator의 objectList에 있는 각 오브젝트의 UBS_Actuator를 직접 호출
+                if (ubsOperator.objectList != null && ubsOperator.objectList.Count > 0)
+                {
+                    foreach (var subObject in ubsOperator.objectList)
+                    {
+                        if (subObject == null) continue;
+                        
+                        UBS_Actuator actuator = subObject.GetComponent<UBS_Actuator>();
+                        if (actuator != null)
+                        {
+                            switch (ubsOperator.operatorType)
+                            {
+                                case UBS_Operator.EnumOperatorType.Toggle:
+                                    actuator.ActivateToggle();
+                                    break;
+                                case UBS_Operator.EnumOperatorType.Open:
+                                    actuator.ActivateOpen();
+                                    break;
+                                case UBS_Operator.EnumOperatorType.Close:
+                                    actuator.ActivateClose();
+                                    break;
+                            }
+                            Debug.Log($"[UBSDoorInteractable] Door operated via UBS_Operator ({ubsOperator.operatorType}) on {subObject.name}");
+                        }
+                        else
+                        {
+                            Debug.LogWarning($"[UBSDoorInteractable] {subObject.name}에 UBS_Actuator 컴포넌트가 없습니다!");
+                        }
+                    }
+                }
+                else
+                {
+                    Debug.LogWarning($"[UBSDoorInteractable] {name}: UBS_Operator의 objectList가 비어있습니다!");
+                }
             }
             else
             {

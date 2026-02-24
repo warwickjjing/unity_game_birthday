@@ -48,6 +48,11 @@ namespace BirthdayCakeQuest.Props
         private float _autoCloseTimer;
         private BoxCollider _doorCollider; // 문 충돌 제어용
 
+        /// <summary>
+        /// 문이 열려있는지 여부를 반환합니다.
+        /// </summary>
+        public bool IsOpen => _isOpen;
+
         public bool CanInteract
         {
             get
@@ -82,7 +87,6 @@ namespace BirthdayCakeQuest.Props
                 doorPivot = transform.Find("DoorPivot");
                 if (doorPivot == null)
                 {
-                    Debug.LogWarning("[Door] DoorPivot을 찾을 수 없습니다. transform을 사용합니다.");
                     doorPivot = transform;
                 }
             }

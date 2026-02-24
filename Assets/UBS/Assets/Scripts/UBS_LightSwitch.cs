@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 /// <summary>
 /// Light switch controller
@@ -58,20 +59,44 @@ public class UBS_LightSwitch : MonoBehaviour
 
     private void Start()
     {
+        // TitleScene에서는 UBS 상호작용 UI를 사용하지 않으므로 초기화하지 않음
+        if (SceneManager.GetActiveScene().name == "TitleScene")
+        {
+            enabled = false;
+            return;
+        }
+
         audioSource = GetComponent<AudioSource>();
-        audioSource.playOnAwake = false;
-        highlightMaterial = UBS_Global.instance.defaultObjects.highlightMaterial;
+        if (audioSource != null)
+            audioSource.playOnAwake = false;
 
-        messageText = GameObject.Find("MessageText1").GetComponent<Text>();
-        crossHair = GameObject.Find("CrossHair2").GetComponent<Image>();
-        crossHair.enabled = false;
+        if (UBS_Global.instance != null && UBS_Global.instance.defaultObjects != null)
+            highlightMaterial = UBS_Global.instance.defaultObjects.highlightMaterial;
 
-        startAngle = toggleObject.localRotation.eulerAngles;
-        toggleAngle = startAngle + toggleRotation;
+        var msgGo = GameObject.Find("MessageText1");
+        if (msgGo != null) messageText = msgGo.GetComponent<Text>();
+
+        var crossGo = GameObject.Find("CrossHair2");
+        if (crossGo != null) crossHair = crossGo.GetComponent<Image>();
+        if (crossHair != null) crossHair.enabled = false;
+
+        if (toggleObject != null)
+        {
+            startAngle = toggleObject.localRotation.eulerAngles;
+            toggleAngle = startAngle + toggleRotation;
+        }
+        else
+        {
+            // 필수 참조가 없으면 동작 비활성화 (NRE 방지)
+            enabled = false;
+            return;
+        }
 
         foreach (var linkedLightBulb in LightBulbList) // turn all lights off at startup
         {
-            linkedLightBulb.GetComponent<UBS_LightBulb>().Off();
+            if (linkedLightBulb == null) continue;
+            var bulb = linkedLightBulb.GetComponent<UBS_LightBulb>();
+            if (bulb != null) bulb.Off();
         }
     }
 

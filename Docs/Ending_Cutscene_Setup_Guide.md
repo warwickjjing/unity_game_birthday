@@ -185,7 +185,7 @@
 3. **설정**:
    - **Cutscene Controller**: EndingCutscene GameObject 드래그
    - **Inventory**: GameSystems/IngredientInventory 드래그
-   - **Interact Prompt**: "소파에 앉기 [E]"
+   - **Interact Prompt**: "소파에 앉기 [F]"
    - **Incomplete Prompt**: "케이크를 완성하세요"
 
 ### 4.3 EndingCutsceneController 설정
@@ -502,9 +502,9 @@ Birthday Cake Quest
 1. **Play 버튼 클릭**
 2. **확인 사항**:
    - ✓ 플레이어 이동 (WASD)
-   - ✓ 재료 수집 (E키)
+   - ✓ 재료 수집 (F키)
    - ✓ 5개 수집 시 케이크 표시
-   - ✓ 소파 앞에서 E키 → 엔딩 컷씬
+   - ✓ 소파 앞에서 F키 → 엔딩 컷씬
    - ✓ 카메라 티비로 이동
    - ✓ 티비에 영상 재생
    - ✓ 영상 종료 후 크레딧 스크롤

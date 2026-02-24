@@ -15,6 +15,7 @@ using UnityEngine.UI;
 using UnityEngine;
 using System.Collections.Generic;
 using System;
+using UnityEngine.SceneManagement;
 
 
 [Serializable]
@@ -134,8 +135,16 @@ public class UBS_Actuator : MonoBehaviour
 
     void Start()
     {
+        // TitleScene에서는 UBS 상호작용 UI를 사용하지 않으므로 초기화하지 않음
+        if (SceneManager.GetActiveScene().name == "TitleScene")
+        {
+            init = false;
+            return;
+        }
+
         audioSource = gameObject.GetComponent<AudioSource>();
-        audioSource.playOnAwake = false;
+        if (audioSource != null)
+            audioSource.playOnAwake = false;
 
         // Precalculate closed and open angles
         startAngle = transform.eulerAngles;
@@ -145,10 +154,14 @@ public class UBS_Actuator : MonoBehaviour
         closedPosition = transform.localPosition;
         openPosition = closedPosition + slide;
 
-        messageText = GameObject.Find("MessageText1").GetComponent<Text>();
+        var msgGo = GameObject.Find("MessageText1");
+        if (msgGo != null)
+            messageText = msgGo.GetComponent<Text>();
+
         operating = false;
         operationState = EnumObjectState.Undefined;
 
+        // messageText가 없어도 작동은 가능하지만, 이후 코드에서 참조할 수 있으니 null 안전 처리
         init = true;
 
     } // End Start

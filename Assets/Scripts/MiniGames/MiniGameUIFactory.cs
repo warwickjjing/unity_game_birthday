@@ -628,7 +628,7 @@ namespace BirthdayCakeQuest.MiniGames
         /// <summary>
         /// TextMeshProUGUI 컴포넌트를 가진 GameObject를 생성합니다.
         /// </summary>
-        private static GameObject CreateTextMeshPro(string name, Transform parent)
+        public static GameObject CreateTextMeshPro(string name, Transform parent)
         {
             GameObject obj = new GameObject(name);
             obj.transform.SetParent(parent, false);

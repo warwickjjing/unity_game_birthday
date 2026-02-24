@@ -48,3 +48,6 @@ ExportedObj/
 ehthumbs.db
 Thumbs.db
 
+Library/
+Temp/
+Build/

@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using TMPro;
 
 namespace BirthdayCakeQuest.UI
@@ -40,10 +41,9 @@ namespace BirthdayCakeQuest.UI
 
         private void OnEnable()
         {
-            if (!_isScrolling)
-            {
-                StartScrolling();
-            }
+            // OnEnable에서는 자동으로 스크롤을 시작하지 않음
+            // EndingCutsceneController.ShowCredits()에서 명시적으로 StartScrolling()을 호출해야 함
+            // 이렇게 하면 게임 시작 시 CreditsUI가 활성화되어 있어도 자동으로 스크롤되지 않음
         }
 
         /// <summary>

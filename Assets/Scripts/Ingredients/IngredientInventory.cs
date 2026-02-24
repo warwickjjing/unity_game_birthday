@@ -59,6 +59,7 @@ namespace BirthdayCakeQuest.Ingredients
                 return;
             }
             Instance = this;
+            DontDestroyOnLoad(gameObject); // 씬 전환 시에도 인벤토리 상태 유지
         }
 
         private void OnDestroy()
@@ -81,19 +82,16 @@ namespace BirthdayCakeQuest.Ingredients
         {
             if (_collectedIngredients.Contains(id))
             {
-                Debug.LogWarning($"[Inventory] {id} is already collected.");
                 return false;
             }
 
             _collectedIngredients.Add(id);
-            Debug.Log($"[Inventory] Collected {id}! ({CollectedCount}/{TotalRequired})");
 
             // C# 이벤트 호출 (코드 구독용)
             OnIngredientCollected?.Invoke(id);
 
             if (AllCollected)
             {
-                Debug.Log("[Inventory] ALL INGREDIENTS COLLECTED!");
                 // UnityEvent 호출 (Inspector 연결용)
                 onAllIngredientsCollected?.Invoke();
                 // C# 이벤트 호출 (코드 구독용)
@@ -117,7 +115,6 @@ namespace BirthdayCakeQuest.Ingredients
         public void Reset()
         {
             _collectedIngredients.Clear();
-            Debug.Log("[Inventory] Reset.");
         }
     }
 }

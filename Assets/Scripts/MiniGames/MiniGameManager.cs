@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using BirthdayCakeQuest.Player;
 
 namespace BirthdayCakeQuest.MiniGames
@@ -41,6 +42,7 @@ namespace BirthdayCakeQuest.MiniGames
         private IMiniGame _currentMiniGame;
         private Action<bool> _currentCallback;
         private bool _isPlaying;
+        private bool _initialized = false;
 
         private void Awake()
         {
@@ -52,11 +54,28 @@ namespace BirthdayCakeQuest.MiniGames
 
             _instance = this;
             DontDestroyOnLoad(gameObject);
-            Debug.Log("[MiniGameManager] Instance created and initialized");
         }
 
         private void Start()
         {
+            EnsureInitialized();
+        }
+
+        /// <summary>
+        /// 미니게임 매니저 초기화를 보장합니다.
+        /// </summary>
+        private void EnsureInitialized()
+        {
+            if (_initialized)
+                return;
+
+            // 현재 씬이 TitleScene이면 미니게임 관련 초기화를 건너뜀
+            if (SceneManager.GetActiveScene().name == "TitleScene")
+            {
+                _initialized = true; // TitleScene에서는 초기화 완료로 표시
+                return;
+            }
+
             // 자동으로 참조 찾기
             if (playerController == null)
             {
@@ -109,11 +128,18 @@ namespace BirthdayCakeQuest.MiniGames
             }
             else
             {
-                // 기존 Panel에 컴포넌트가 없으면 추가
-                if (sugarMiniGamePanel.GetComponent<SugarPouringMiniGame>() == null)
+                // 기존 Panel에 SugarConveyorMiniGame 컴포넌트가 없으면 추가
+                if (sugarMiniGamePanel.GetComponent<SugarConveyorMiniGame>() == null)
                 {
-                    MiniGameUIFactory.SetupSugarMiniGameComponent(sugarMiniGamePanel);
-                    Debug.Log("[MiniGameManager] SugarPouringMiniGame 컴포넌트 자동 추가 완료");
+                    // 오래된 컴포넌트 제거
+                    var oldComponent = sugarMiniGamePanel.GetComponent<SugarPouringMiniGame>();
+                    if (oldComponent != null)
+                    {
+                        DestroyImmediate(oldComponent);
+                    }
+                    
+                    // 새 컴포넌트 추가
+                    sugarMiniGamePanel.AddComponent<SugarConveyorMiniGame>();
                 }
             }
 
@@ -124,28 +150,41 @@ namespace BirthdayCakeQuest.MiniGames
                 {
                     eggMiniGamePanel = MiniGameUIFactory.CreateEggMiniGamePanel(miniGameCanvas);
                     eggMiniGamePanel.SetActive(false); // 초기 비활성화
-                    Debug.Log("[MiniGameManager] EggMiniGamePanel 자동 생성 완료");
                 }
 
                 if (flourMiniGamePanel == null)
                 {
                     flourMiniGamePanel = MiniGameUIFactory.CreateFlourMiniGamePanel(miniGameCanvas);
+                    flourMiniGamePanel.AddComponent<FlourSiftingMiniGame>();
                     flourMiniGamePanel.SetActive(false); // 초기 비활성화
-                    Debug.Log("[MiniGameManager] FlourMiniGamePanel 자동 생성 완료");
+                }
+                else
+                {
+                    // 기존 Panel에 FlourSiftingMiniGame 컴포넌트가 없으면 추가
+                    if (flourMiniGamePanel.GetComponent<FlourSiftingMiniGame>() == null)
+                    {
+                        // 오래된 컴포넌트 제거
+                        var oldComponent = flourMiniGamePanel.GetComponent<FlourStackingMiniGame>();
+                        if (oldComponent != null)
+                        {
+                            DestroyImmediate(oldComponent);
+                        }
+                        
+                        // 새 컴포넌트 추가
+                        flourMiniGamePanel.AddComponent<FlourSiftingMiniGame>();
+                    }
                 }
 
                 if (butterMiniGamePanel == null)
                 {
                     butterMiniGamePanel = MiniGameUIFactory.CreateSimpleMiniGamePanel(miniGameCanvas, "ButterMiniGamePanel", "냉장고 미로", "버터를 찾아보세요!");
                     butterMiniGamePanel.SetActive(false); // 초기 비활성화
-                    Debug.Log("[MiniGameManager] ButterMiniGamePanel 자동 생성 완료");
                 }
 
                 if (strawberryMiniGamePanel == null)
                 {
                     strawberryMiniGamePanel = MiniGameUIFactory.CreateStrawberryMiniGamePanel(miniGameCanvas);
                     strawberryMiniGamePanel.SetActive(false); // 초기 비활성화
-                    Debug.Log("[MiniGameManager] StrawberryMiniGamePanel 자동 생성 완료");
                 }
             }
             
@@ -159,8 +198,10 @@ namespace BirthdayCakeQuest.MiniGames
             if (miniGameCanvas != null)
             {
                 miniGameCanvas.gameObject.SetActive(false);
-                Debug.Log("[MiniGameManager] MiniGame Canvas 초기 비활성화 완료");
             }
+
+            // 모든 초기화가 완료된 후에 플래그 설정
+            _initialized = true;
         }
 
         /// <summary>
@@ -170,13 +211,24 @@ namespace BirthdayCakeQuest.MiniGames
         /// <param name="onComplete">완료 콜백 (성공: true, 실패: false)</param>
         public void StartMiniGame(MiniGameType type, Action<bool> onComplete)
         {
-            if (_isPlaying)
+            // Scene 기반 미니게임인지 확인
+            if (MiniGameSceneLoader.IsSceneBasedMiniGame(type))
             {
-                Debug.LogWarning("[MiniGameManager] 이미 미니게임이 진행 중입니다!");
+                MiniGameSceneLoader.LoadMiniGameScene(type, onComplete);
                 return;
             }
 
-            Debug.Log($"[MiniGameManager] {type} 미니게임 시작");
+            // 기존 Panel 기반 미니게임
+            // 초기화 보장
+            EnsureInitialized();
+
+            // Panel이 없으면 강제로 생성
+            EnsurePanelExists(type);
+
+            if (_isPlaying)
+            {
+                return;
+            }
 
             _isPlaying = true;
             _currentCallback = onComplete;
@@ -192,7 +244,6 @@ namespace BirthdayCakeQuest.MiniGames
 
             if (_currentMiniGame == null)
             {
-                Debug.LogError($"[MiniGameManager] {type} 미니게임을 생성할 수 없습니다!");
                 EndMiniGame(false);
                 return;
             }
@@ -223,8 +274,6 @@ namespace BirthdayCakeQuest.MiniGames
         {
             if (!_isPlaying)
                 return;
-
-            Debug.Log($"[MiniGameManager] 미니게임 종료 - {(success ? "성공" : "실패")}");
 
             _isPlaying = false;
 
@@ -279,42 +328,24 @@ namespace BirthdayCakeQuest.MiniGames
         /// </summary>
         private void PauseGameplay(bool pause)
         {
-            Debug.Log($"[MiniGameManager] PauseGameplay({pause})");
-
             if (playerController != null)
             {
                 playerController.SetPaused(pause);
-                Debug.Log($"[MiniGameManager] PlayerController paused: {pause}");
-            }
-            else
-            {
-                Debug.LogWarning("[MiniGameManager] PlayerController is null!");
             }
 
             if (interactor != null)
             {
                 interactor.SetPaused(pause);
-                Debug.Log($"[MiniGameManager] Interactor paused: {pause}");
-            }
-            else
-            {
-                Debug.LogWarning("[MiniGameManager] Interactor is null!");
             }
 
             if (isometricCamera != null)
             {
                 isometricCamera.SetPaused(pause);
-                Debug.Log($"[MiniGameManager] Camera paused: {pause}");
-            }
-            else
-            {
-                Debug.LogWarning("[MiniGameManager] IsometricCamera is null!");
             }
 
             // 커서 표시 설정
             Cursor.visible = pause;
             Cursor.lockState = pause ? CursorLockMode.None : CursorLockMode.Locked;
-            Debug.Log($"[MiniGameManager] Cursor visible: {pause}");
         }
 
         /// <summary>
@@ -366,15 +397,13 @@ namespace BirthdayCakeQuest.MiniGames
                 case MiniGameType.Sugar:
                     if (sugarMiniGamePanel != null)
                     {
-                        var sugarGame = sugarMiniGamePanel.GetComponent<SugarPouringMiniGame>();
+                        var sugarGame = sugarMiniGamePanel.GetComponent<SugarConveyorMiniGame>();
                         if (sugarGame == null)
                         {
-                            Debug.LogError("[MiniGameManager] SugarMiniGamePanel에 SugarPouringMiniGame 컴포넌트가 없습니다!");
                             return null;
                         }
                         return sugarGame;
                     }
-                    Debug.LogError("[MiniGameManager] SugarMiniGamePanel이 할당되지 않았습니다!");
                     return null;
 
                 case MiniGameType.Egg:
@@ -383,26 +412,22 @@ namespace BirthdayCakeQuest.MiniGames
                         var eggGame = eggMiniGamePanel.GetComponent<EggDeliveryMiniGame>();
                         if (eggGame == null)
                         {
-                            Debug.LogError("[MiniGameManager] EggMiniGamePanel에 EggDeliveryMiniGame 컴포넌트가 없습니다!");
                             return null;
                         }
                         return eggGame;
                     }
-                    Debug.LogError("[MiniGameManager] EggMiniGamePanel이 할당되지 않았습니다!");
                     return null;
 
                 case MiniGameType.Flour:
                     if (flourMiniGamePanel != null)
                     {
-                        var flourGame = flourMiniGamePanel.GetComponent<FlourStackingMiniGame>();
+                        var flourGame = flourMiniGamePanel.GetComponent<FlourSiftingMiniGame>();
                         if (flourGame == null)
                         {
-                            Debug.LogError("[MiniGameManager] FlourMiniGamePanel에 FlourStackingMiniGame 컴포넌트가 없습니다!");
                             return null;
                         }
                         return flourGame;
                     }
-                    Debug.LogError("[MiniGameManager] FlourMiniGamePanel이 할당되지 않았습니다!");
                     return null;
 
                 case MiniGameType.Butter:
@@ -415,7 +440,6 @@ namespace BirthdayCakeQuest.MiniGames
                         }
                         return butterGame;
                     }
-                    Debug.LogError("[MiniGameManager] ButterMiniGamePanel이 할당되지 않았습니다!");
                     return null;
 
                 case MiniGameType.Strawberry:
@@ -424,16 +448,13 @@ namespace BirthdayCakeQuest.MiniGames
                         var strawberryGame = strawberryMiniGamePanel.GetComponent<StrawberryPickingMiniGame>();
                         if (strawberryGame == null)
                         {
-                            Debug.LogError("[MiniGameManager] StrawberryMiniGamePanel에 StrawberryPickingMiniGame 컴포넌트가 없습니다!");
                             return null;
                         }
                         return strawberryGame;
                     }
-                    Debug.LogError("[MiniGameManager] StrawberryMiniGamePanel이 할당되지 않았습니다!");
                     return null;
 
                 default:
-                    Debug.LogError($"[MiniGameManager] 알 수 없는 미니게임 타입: {type}");
                     return null;
             }
         }
@@ -445,6 +466,62 @@ namespace BirthdayCakeQuest.MiniGames
         {
             miniGameCanvas = canvas;
             sugarMiniGamePanel = sugarPanel;
+        }
+
+        /// <summary>
+        /// 특정 타입의 Panel이 존재하는지 확인하고, 없으면 생성합니다.
+        /// </summary>
+        private void EnsurePanelExists(MiniGameType type)
+        {
+            if (miniGameCanvas == null)
+            {
+                miniGameCanvas = MiniGameUIFactory.CreateMiniGameCanvas();
+            }
+
+            switch (type)
+            {
+                case MiniGameType.Sugar:
+                    if (sugarMiniGamePanel == null)
+                    {
+                        sugarMiniGamePanel = MiniGameUIFactory.CreateSugarMiniGamePanel(miniGameCanvas);
+                        sugarMiniGamePanel.AddComponent<SugarConveyorMiniGame>();
+                        sugarMiniGamePanel.SetActive(false);
+                    }
+                    break;
+
+                case MiniGameType.Flour:
+                    if (flourMiniGamePanel == null)
+                    {
+                        flourMiniGamePanel = MiniGameUIFactory.CreateFlourMiniGamePanel(miniGameCanvas);
+                        flourMiniGamePanel.AddComponent<FlourSiftingMiniGame>();
+                        flourMiniGamePanel.SetActive(false);
+                    }
+                    break;
+
+                case MiniGameType.Butter:
+                    if (butterMiniGamePanel == null)
+                    {
+                        butterMiniGamePanel = MiniGameUIFactory.CreateSimpleMiniGamePanel(miniGameCanvas, "ButterMiniGamePanel", "냉장고 미로", "버터를 찾아보세요!");
+                        butterMiniGamePanel.SetActive(false);
+                    }
+                    break;
+
+                case MiniGameType.Egg:
+                    if (eggMiniGamePanel == null)
+                    {
+                        eggMiniGamePanel = MiniGameUIFactory.CreateEggMiniGamePanel(miniGameCanvas);
+                        eggMiniGamePanel.SetActive(false);
+                    }
+                    break;
+
+                case MiniGameType.Strawberry:
+                    if (strawberryMiniGamePanel == null)
+                    {
+                        strawberryMiniGamePanel = MiniGameUIFactory.CreateStrawberryMiniGamePanel(miniGameCanvas);
+                        strawberryMiniGamePanel.SetActive(false);
+                    }
+                    break;
+            }
         }
 
         /// <summary>

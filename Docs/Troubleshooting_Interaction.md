@@ -7,7 +7,7 @@
 ## 목차
 
 1. [상호작용이 전혀 작동하지 않을 때](#1-상호작용이-전혀-작동하지-않을-때)
-2. [E키를 눌러도 반응이 없을 때](#2-e키를-눌러도-반응이-없을-때)
+2. [F키를 눌러도 반응이 없을 때](#2-f키를-눌러도-반응이-없을-때)
 3. [문이 열리지 않거나 통과할 수 없을 때](#3-문이-열리지-않거나-통과할-수-없을-때)
 4. [재료를 수집할 수 없을 때](#4-재료를-수집할-수-없을-때)
 5. [미니게임이 시작되지 않을 때](#5-미니게임이-시작되지-않을-때)
@@ -20,8 +20,8 @@
 
 ### 증상
 - 문, 재료 근처에 가도 아무 반응 없음
-- 상호작용 프롬프트(E키 안내)가 보이지 않음
-- E키를 눌러도 아무 일도 일어나지 않음
+- 상호작용 프롬프트(F키 안내)가 보이지 않음
+- F키를 눌러도 아무 일도 일어나지 않음
 
 ### 원인 및 해결방법
 
@@ -69,10 +69,10 @@
 
 ---
 
-## 2. E키를 눌러도 반응이 없을 때
+## 2. F키를 눌러도 반응이 없을 때
 
 ### 증상
-- 상호작용 프롬프트는 보이는데 E키가 작동하지 않음
+- 상호작용 프롬프트는 보이는데 F키가 작동하지 않음
 
 ### 해결방법
 
@@ -95,7 +95,7 @@
 ## 3. 문이 열리지 않거나 통과할 수 없을 때
 
 ### 증상
-- E키를 누르면 문이 열리는데, 플레이어가 통과할 수 없음
+- F키를 누르면 문이 열리는데, 플레이어가 통과할 수 없음
 - 보이지 않는 벽에 막힌 것처럼 행동함
 
 ### 원인
@@ -105,12 +105,11 @@
 
 #### 3.1 자동 수정 (권장)
 최신 버전의 코드에서는 문제가 자동으로 수정됩니다:
-1. `HouseGenerator.cs`: 문 생성 시 DoorPanel과 Handle의 Collider를 자동으로 제거
-2. `Door.cs`: Awake()에서 자식 오브젝트의 Collider를 자동으로 제거
+1. `Door.cs`: Awake()에서 자식 오브젝트의 Collider를 자동으로 제거
 
 **기존 씬의 문 수정:**
 1. Scene에 이미 생성된 문이 있다면 삭제
-2. HouseGenerator를 다시 실행하여 새 문 생성
+2. 문 Prefab/오브젝트를 다시 배치(또는 복제)하여 새 문 생성
 3. 또는 아래 수동 수정 방법 사용
 
 #### 3.2 수동 수정
@@ -136,7 +135,7 @@
 
 ### 증상
 - 재료 근처에 가도 상호작용 프롬프트가 보이지 않음
-- E키를 눌러도 수집되지 않음
+- F키를 눌러도 수집되지 않음
 
 ### 해결방법
 
@@ -204,7 +203,7 @@
 ## 6. 한글 텍스트가 깨져서 보일 때
 
 ### 증상
-- "문 열기 [E]"가 "... [E]"로 표시됨
+- "문 열기 [F]"가 "... [F]"로 표시됨
 - 상호작용 프롬프트 텍스트가 점(...)으로 보임
 
 ### 원인
@@ -212,9 +211,9 @@ TextMeshPro의 기본 폰트(LiberationSans SDF)에 한글 글리프(문자)가 
 
 ### 임시 해결 (현재 적용됨)
 코드를 영어로 변경하여 임시 해결:
-- "문 열기 [E]" → "Open Door [E]"
-- "문 닫기 [E]" → "Close Door [E]"
-- "재료 수집 [E]" → "Collect [Ingredient] [E]"
+- "문 열기 [F]" → "Open Door [F]"
+- "문 닫기 [F]" → "Close Door [F]"
+- "재료 수집 [F]" → "Collect [Ingredient] [F]"
 
 ### 근본적 해결 (권장)
 
@@ -236,7 +235,7 @@ TextMeshPro의 기본 폰트(LiberationSans SDF)에 한글 글리프(문자)가 
    - **Custom Character List**에 사용할 한글 입력:
      ```
      문열기닫기재료수집잠겨있습니다설탕계란밀가루버터딸기
-     [E]키로
+     [F]키로
      ```
    - 또는 `Characters from File`로 `.txt` 파일에서 로드
 3. **Generate Font Atlas** 클릭
@@ -257,7 +256,7 @@ private void CreatePromptUI()
     // ... 기존 코드 ...
 
     _textMesh = textObject.AddComponent<TextMeshPro>();
-    _textMesh.text = "상호작용 [E]";
+    _textMesh.text = "상호작용 [F]";
     _textMesh.fontSize = fontSize;
     _textMesh.color = textColor;
     _textMesh.alignment = TextAlignmentOptions.Center;
@@ -280,8 +279,8 @@ private void CreatePromptUI()
 #### 6.4 한글 메시지 복원
 
 Font Asset이 적용되면 다음 파일들의 메시지를 한글로 다시 변경:
-- `Door.cs`: "Open Door [E]" → "문 열기 [E]"
-- `CollectibleIngredient.cs`: "Collect [X] [E]" → "[X] 수집 [E]"
+- `Door.cs`: "Open Door [F]" → "문 열기 [F]"
+- `CollectibleIngredient.cs`: "Collect [X] [F]" → "[X] 수집 [F]"
 
 ---
 
@@ -306,8 +305,8 @@ Font Asset이 적용되면 다음 파일들의 메시지를 한글로 다시 변
 [Interactor] Nearest interactable: Sugar at distance 1.23m
 → 가장 가까운 상호작용 대상: Sugar, 거리 1.23미터
 
-[Interactor] Interacting with: Collect Sugar [E]
-→ E키를 눌러 Sugar와 상호작용 시작
+[Interactor] Interacting with: Collect Sugar [F]
+→ F키를 눌러 Sugar와 상호작용 시작
 ```
 
 #### CollectibleIngredient
@@ -354,7 +353,7 @@ Font Asset이 적용되면 다음 파일들의 메시지를 한글로 다시 변
 | 증상 | 확인할 로그 | 예상 원인 |
 |------|------------|----------|
 | 상호작용 감지 안됨 | `[Interactor] Found 0 colliders` | Layer 설정 오류 |
-| E키 반응 없음 | 로그 전혀 없음 | Interactor 컴포넌트 없음 |
+| F키 반응 없음 | 로그 전혀 없음 | Interactor 컴포넌트 없음 |
 | 미니게임 안뜸 | `"MiniGameManager를 찾을 수 없습니다!"` | MiniGameManager 없음 |
 | 문 통과 불가 | `"Collider 제거"` 로그 없음 | 오래된 Door 오브젝트 |
 
@@ -368,9 +367,9 @@ Font Asset이 적용되면 다음 파일들의 메시지를 한글로 다시 변
 1. **기존 오브젝트 정리**
    - Hierarchy에서 모든 Door, Ingredient 오브젝트 삭제
    
-2. **HouseGenerator 재실행**
-   - 새로운 집 구조 생성
-   - 최신 코드로 Door와 Ingredient 자동 배치
+2. **핵심 오브젝트 재배치**
+   - Door / Ingredient Prefab(또는 기존 오브젝트 복제)로 다시 배치
+   - `Door.cs`가 포함된 최신 Door 오브젝트 사용(자식 Collider 자동 제거)
 
 3. **필수 오브젝트 확인**
    - Player (Interactor 컴포넌트 포함)
@@ -379,7 +378,6 @@ Font Asset이 적용되면 다음 파일들의 메시지를 한글로 다시 변
    - Canvas (미니게임 UI)
 
 ### 참고 문서
-- [House Generator 가이드](House_Generator_Complete_Guide.md)
 - [Mini Game 설정 가이드](MiniGame_Setup_Guide.md)
 - [Mini Game 빠른 시작](MiniGame_Quick_Start.md)
 

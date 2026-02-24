@@ -21,7 +21,16 @@ namespace BirthdayCakeQuest.UI
         [Header("텍스트 설정")]
         [SerializeField] private Color textColor = Color.white;
         [SerializeField] private Color backgroundColor = new Color(0, 0, 0, 0.7f);
-        [SerializeField] private float fontSize = 0.3f;
+        [SerializeField] private float fontSize = 1.0f;
+
+        private void OnValidate()
+        {
+            // Inspector에서 fontSize가 너무 작으면 자동으로 1.0f로 설정
+            if (fontSize < 0.5f)
+            {
+                fontSize = 1.0f;
+            }
+        }
 
         private GameObject _promptObject;
         private TextMeshPro _textMesh;
@@ -76,7 +85,9 @@ namespace BirthdayCakeQuest.UI
 
             _textMesh = textObject.AddComponent<TextMeshPro>();
             _textMesh.text = "상호작용 [F]";
-            _textMesh.fontSize = fontSize;
+            // fontSize가 너무 작으면 강제로 1.0f로 설정
+            float actualFontSize = fontSize < 0.5f ? 1.0f : fontSize;
+            _textMesh.fontSize = actualFontSize;
             _textMesh.color = textColor;
             _textMesh.alignment = TextAlignmentOptions.Center;
             _textMesh.rectTransform.sizeDelta = new Vector2(3, 1);
@@ -90,6 +101,17 @@ namespace BirthdayCakeQuest.UI
             if (_playerTransform == null || _mainCamera == null)
                 return;
 
+            // 프롬프트 텍스트 가져오기
+            string prompt = _interactable.GetInteractPrompt();
+
+            // null 프롬프트는 프롬프트를 숨김 (순차 퀘스트 등)
+            if (string.IsNullOrEmpty(prompt))
+            {
+                if (_promptObject.activeSelf)
+                    _promptObject.SetActive(false);
+                return;
+            }
+
             // 플레이어와의 거리 확인
             float distance = Vector3.Distance(transform.position, _playerTransform.position);
             bool shouldShow = distance <= maxVisibleDistance && _interactable.CanInteract;
@@ -102,7 +124,14 @@ namespace BirthdayCakeQuest.UI
             if (shouldShow)
             {
                 // 프롬프트 텍스트 업데이트
-                _textMesh.text = _interactable.GetInteractPrompt();
+                _textMesh.text = prompt;
+
+                // 폰트 크기 업데이트 (Inspector 값 반영, 최소 1.0f 보장)
+                if (_textMesh != null)
+                {
+                    float actualFontSize = fontSize < 0.5f ? 1.0f : fontSize;
+                    _textMesh.fontSize = actualFontSize;
+                }
 
                 // 카메라를 향하도록 회전 (빌보드 효과)
                 _promptObject.transform.LookAt(_mainCamera.transform);

@@ -1,0 +1,254 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &6609648641122818699
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5257402864094061884}
+  - component: {fileID: 4702300420641908592}
+  m_Layer: 0
+  m_Name: QuestSequenceManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5257402864094061884
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6609648641122818699}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4702300420641908592
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6609648641122818699}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b58571a06b6dfc14ebbda8b107ef05a8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  questSequence:
+  - ingredientId: 4
+    questTitle: "\uB538\uAE30\uB97C \uCC3E\uC544\uBCF4\uC790!"
+    questDialogues:
+    - text: "\uBE5B\uC774 \uB09C\uB2E4\uACE0 \uD588\uC73C\uB2C8\uAE4C \uC798 \uBCF4\uBA74
+        \uC788\uACA0\uC9C0..."
+      speakerName: "\uC5FC\uB780\uC601"
+      speakerPortrait: {fileID: 1364516766, guid: 4d0297b35e11cc24fb22ce37c566eb88, type: 3}
+    - text: "\uC544 \uC800\uAE30 \uC788\uB2E4! \uC0DD\uAC01\uBCF4\uB2E4 \uC798 \uC228\uC5B4\uC788\uB124."
+      speakerName: "\uC5FC\uB780\uC601"
+      speakerPortrait: {fileID: 1364516766, guid: 4d0297b35e11cc24fb22ce37c566eb88, type: 3}
+    targetIngredientObjects:
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+    - {fileID: 0}
+  - ingredientId: 2
+    questTitle: "\uACE0\uC591\uC774\uB97C \uB2ED\uC7A5\uC5D0 \uB123\uACE0 \uACC4\uB780\uC744
+      \uAD6C\uD558\uC790!"
+    questDialogues:
+    - text: "\uB538\uAE30 \uB2E4 \uBAA8\uC558\uC5B4? \uC5ED\uC2DC \uB780\uC601\uC774
+        \uCD5C\uACE0!"
+      speakerName: "\uC11C\uC0C1\uD6C8"
+      speakerPortrait: {fileID: 764588270, guid: 4d0297b35e11cc24fb22ce37c566eb88, type: 3}
+    - text: "\uCE6D\uCC2C\uC740 \uB410\uACE0, \uB2E4\uC74C\uC740?"
+      speakerName: "\uC5FC\uB780\uC601"
+      speakerPortrait: {fileID: 1364516766, guid: 4d0297b35e11cc24fb22ce37c566eb88, type: 3}
+    - text: "(\uBA38\uC4F1) \uC774\uBC88\uC5D4 \uB2EC\uAC40! \uB2ED\uC7A5 \uC548\uC5D0
+        \uC788\uB294\uB370..."
+      speakerName: "\uC11C\uC0C1\uD6C8"
+      speakerPortrait: {fileID: 764588270, guid: 4d0297b35e11cc24fb22ce37c566eb88, type: 3}
+    - text: "\uB2ED\uB4E4\uC774 \uC5C4\uCCAD \uB9CE\uC544\uC11C \uADF8\uB0E5 \uB4E4\uC5B4\uAC00\uBA74
+        \uB09C\uB9AC\uB0A0 \uAC70\uC57C"
+      speakerName: "\uC11C\uC0C1\uD6C8"
+      speakerPortrait: {fileID: 764588270, guid: 4d0297b35e11cc24fb22ce37c566eb88, type: 3}
+    - text: "\uADF8\uB7FC \uC5B4\uB5BB\uAC8C \uD574?"
+      speakerName: "\uC5FC\uB780\uC601"
+      speakerPortrait: {fileID: 568604705, guid: dc29777644dc5774fae65d56290cc3a5, type: 3}
+    - text: "\uACC4\uB2E8 \uC62C\uB77C\uAC00\uBA74 \uACE0\uC591\uC774\uAC00 \uC788\uAC70\uB4E0!
+        \uACE0\uC591\uC774\uB97C \uB2ED\uC7A5\uC5D0 \uB123\uC5B4\uC11C \uB2ED\uB4E4
+        \uC880 \uCAD3\uC544\uC918!"
+      speakerName: "\uC11C\uC0C1\uD6C8"
+      speakerPortrait: {fileID: 764588270, guid: 4d0297b35e11cc24fb22ce37c566eb88, type: 3}
+    - text: "...\uACE0\uC591\uC774\uB97C?"
+      speakerName: "\uC5FC\uB780\uC601"
+      speakerPortrait: {fileID: 568604705, guid: dc29777644dc5774fae65d56290cc3a5, type: 3}
+    - text: "\uC751!"
+      speakerName: "\uC11C\uC0C1\uD6C8"
+      speakerPortrait: {fileID: 764588270, guid: 4d0297b35e11cc24fb22ce37c566eb88, type: 3}
+    - text: "\uC54C\uACA0\uC5B4. \uB3C4\uB355\uC801\uC73C\uB85C \uC880 \uAC78\uB9AC\uC9C0\uB9CC
+        \uD574\uBCFC\uAC8C!"
+      speakerName: "\uC5FC\uB780\uC601"
+      speakerPortrait: {fileID: 1861983472, guid: dc29777644dc5774fae65d56290cc3a5, type: 3}
+    targetIngredientObjects:
+    - {fileID: 0}
+  - ingredientId: 0
+    questTitle: "\uC774\uC138\uACC4\uC758 \uBC29\uC557\uAC04\uC5D0\uC11C \uBC00\uAC00\uB8E8\uB97C
+      \uC5BB\uC790!"
+    questDialogues:
+    - text: "\uC624 \uACE0\uC591\uC774 \uC791\uC804 \uC131\uACF5\uD588\uAD6C\uB098!"
+      speakerName: "\uC11C\uC0C1\uD6C8"
+      speakerPortrait: {fileID: 764588270, guid: 4d0297b35e11cc24fb22ce37c566eb88, type: 3}
+    - text: "\uB2ED\uB4E4\uC774 \uC5C4\uCCAD \uBB34\uC11C\uC6CC\uD558\uB358\uB370
+        \uC880 \uBBF8\uC548\uD558\uB354\uB77C."
+      speakerName: "\uC5FC\uB780\uC601"
+      speakerPortrait: {fileID: 568604705, guid: dc29777644dc5774fae65d56290cc3a5, type: 3}
+    - text: "(\uBB34\uC2DC\uD558\uACE0) \uB2E4\uC74C\uC740 \uBC00\uAC00\uB8E8\uC57C!"
+      speakerName: "\uC11C\uC0C1\uD6C8"
+      speakerPortrait: {fileID: 1234337718, guid: dc29777644dc5774fae65d56290cc3a5, type: 3}
+    - text: "\uBC00\uAC00\uB8E8\uB294 \uB9C8\uD2B8 \uAC00\uBA74 \uB418\uC796\uC544.
+        \uBC30\uBBFC\uB3C4 \uC788\uACE0!"
+      speakerName: "\uC5FC\uB780\uC601"
+      speakerPortrait: {fileID: 568604705, guid: dc29777644dc5774fae65d56290cc3a5, type: 3}
+    - text: "...\uADF8\uAC8C \uC880 \uD2B9\uC218\uD55C \uBC00\uAC00\uB8E8\uAC70\uB4E0.
+        \uB2E4\uB978 \uCC28\uC6D0\uC758 \uBC29\uC557\uAC04\uC5D0 \uC788\uC5B4"
+      speakerName: "\uC11C\uC0C1\uD6C8"
+      speakerPortrait: {fileID: 1234337718, guid: dc29777644dc5774fae65d56290cc3a5, type: 3}
+    - text: "\uB2E4\uB978 \uCC28\uC6D0..?\t"
+      speakerName: "\uC5FC\uB780\uC601"
+      speakerPortrait: {fileID: 568604705, guid: dc29777644dc5774fae65d56290cc3a5, type: 3}
+    - text: "\uD654\uC7A5\uC2E4 \uC695\uC870 \uBCF4\uACE0 \uC0C1\uD638\uC791\uC6A9\uD558\uBA74
+        \uAC08 \uC218 \uC788\uC5B4! \uB3C8\uC740 \uC5C6\uC5B4\uC11C \uC77C \uC880
+        \uB3C4\uC640\uC918\uC57C \uD560 \uAC83 \uAC19\uC740\uB370..."
+      speakerName: "\uC11C\uC0C1\uD6C8"
+      speakerPortrait: {fileID: 1234337718, guid: dc29777644dc5774fae65d56290cc3a5, type: 3}
+    - text: "\uC544\uB2C8 \uC7AC\uB8CC \uAD6C\uD558\uB7EC \uB2E4\uB978 \uCC28\uC6D0\uAE4C\uC9C0
+        \uAC00\uC57C\uD574? \uC0DD\uC77C\uCF00\uC774\uD06C \uD558\uB098 \uB9CC\uB4DC\uB294
+        \uB370?"
+      speakerName: "\uC5FC\uB780\uC601"
+      speakerPortrait: {fileID: 568604705, guid: dc29777644dc5774fae65d56290cc3a5, type: 3}
+    - text: "..\uBBF8\uC548\uD574. \uADF8\uB798\uB3C4 \uBD80\uD0C1\uD574!"
+      speakerName: "\uC11C\uC0C1\uD6C8"
+      speakerPortrait: {fileID: -912038563, guid: dc29777644dc5774fae65d56290cc3a5, type: 3}
+    - text: "\uC5B4\uD734, \uC54C\uACA0\uC5B4. \uAC00\uBCFC\uAC8C."
+      speakerName: "\uC5FC\uB780\uC601"
+      speakerPortrait: {fileID: 1364516766, guid: 4d0297b35e11cc24fb22ce37c566eb88, type: 3}
+    targetIngredientObjects:
+    - {fileID: 0}
+  - ingredientId: 3
+    questTitle: "\uC18C\uC5D0\uAC8C \uBC84\uD130\uB97C \uAD6C\uD574\uBCF4\uC790!"
+    questDialogues:
+    - text: "\uBC00\uAC00\uB8E8\uB3C4 \uAD6C\uD574\uC654\uAD6C\uB098! \uB2E4\uC74C\uC740
+        \uBC84\uD130\uC57C!"
+      speakerName: "\uC11C\uC0C1\uD6C8"
+      speakerPortrait: {fileID: 764588270, guid: 4d0297b35e11cc24fb22ce37c566eb88, type: 3}
+    - text: "\uBC84\uD130\uB294 \uB9C8\uD2B8\uC5D0\uC11C \uD30C\uB294 \uAC70 \uC544\uB2C8\uC57C?"
+      speakerName: "\uC5FC\uB780\uC601"
+      speakerPortrait: {fileID: 568604705, guid: dc29777644dc5774fae65d56290cc3a5, type: 3}
+    - text: "\uB0C9\uC7A5\uACE0\uC5D0 \uC6B0\uC720\uAC00 \uC788\uAC70\uB4E0? \uADF8\uAC78
+        \uB9C8\uB2F9\uC5D0 \uC788\uB294 \uC18C\uD55C\uD14C \uC918\uBD10!"
+      speakerName: "\uC11C\uC0C1\uD6C8"
+      speakerPortrait: {fileID: 764588270, guid: 4d0297b35e11cc24fb22ce37c566eb88, type: 3}
+    - text: "...\uC18C\uD55C\uD14C?"
+      speakerName: "\uC5FC\uB780\uC601"
+      speakerPortrait: {fileID: 568604705, guid: dc29777644dc5774fae65d56290cc3a5, type: 3}
+    - text: "\uC751! \uC2E0\uC120\uD55C \uC6B0\uC720\uB97C \uC8FC\uBA74 \uC2E0\uC120\uD55C
+        \uBC84\uD130\uB85C \uB3CC\uB824\uC900\uB300!"
+      speakerName: "\uC11C\uC0C1\uD6C8"
+      speakerPortrait: {fileID: 764588270, guid: 4d0297b35e11cc24fb22ce37c566eb88, type: 3}
+    - text: "\uADF8\uAC8C \uBB34\uC2A8 \uB17C\uB9AC\uC57C."
+      speakerName: "\uC5FC\uB780\uC601"
+      speakerPortrait: {fileID: 552074894, guid: dc29777644dc5774fae65d56290cc3a5, type: 3}
+    - text: "\uADF8\uB0E5 \uD55C\uBC88 \uC918\uBD10!!"
+      speakerName: "\uC11C\uC0C1\uD6C8"
+      speakerPortrait: {fileID: 1234337718, guid: dc29777644dc5774fae65d56290cc3a5, type: 3}
+    - text: "\uC54C\uACA0\uC5B4, \uC54C\uACA0\uC5B4."
+      speakerName: "\uC5FC\uB780\uC601"
+      speakerPortrait: {fileID: 1364516766, guid: 4d0297b35e11cc24fb22ce37c566eb88, type: 3}
+    targetIngredientObjects: []
+  - ingredientId: 1
+    questTitle: "\uC124\uD0D5\uC744 \uAD6C\uD558\uC790!"
+    questDialogues:
+    - text: "\uB9C8\uC9C0\uB9C9\uC774\uC57C! \uC124\uD0D5!"
+      speakerName: "\uC11C\uC0C1\uD6C8"
+      speakerPortrait: {fileID: 764588270, guid: 4d0297b35e11cc24fb22ce37c566eb88, type: 3}
+    - text: "\uC124\uD0D5\uC740 \uB610 \uC5B4\uB514\uC11C..."
+      speakerName: "\uC5FC\uB780\uC601"
+      speakerPortrait: {fileID: 568604705, guid: dc29777644dc5774fae65d56290cc3a5, type: 3}
+    - text: "\uC124\uD0D5\uC740 \uD2B9\uBCC4\uD788..!"
+      speakerName: "\uC11C\uC0C1\uD6C8"
+      speakerPortrait: {fileID: 1234337718, guid: dc29777644dc5774fae65d56290cc3a5, type: 3}
+    - text: "\uD2B9\uBCC4\uD788..? \uB610 \uBB58 \uD574\uC57C\uD558\uB294\uAC70\uC57C?"
+      speakerName: "\uC5FC\uB780\uC601"
+      speakerPortrait: {fileID: 568604705, guid: dc29777644dc5774fae65d56290cc3a5, type: 3}
+    - text: "\uCFE0\uD321\uC73C\uB85C \uC8FC\uBB38\uD574\uC11C~ \uBB38\uC55E\uC5D0
+        \uC640\uC788\uC9C0"
+      speakerName: "\uC11C\uC0C1\uD6C8"
+      speakerPortrait: {fileID: 1234337718, guid: dc29777644dc5774fae65d56290cc3a5, type: 3}
+    - text: "\uC9C4\uC791\uC5D0 \uB2E4\uB978 \uC7AC\uB8CC\uB3C4 \uC2DC\uCF30\uC5B4\uC57C\uC9C0!
+        \uADF8\uB798\uB3C4 \uC798\uD588\uC5B4!"
+      speakerName: "\uC5FC\uB780\uC601"
+      speakerPortrait: {fileID: 1861983472, guid: dc29777644dc5774fae65d56290cc3a5, type: 3}
+    - text: "\uC774\uC81C \uC124\uD0D5\uAE4C\uC9C0 \uBAA8\uC73C\uBA74 \uD2B9\uBCC4
+        \uC250\uD504\uAC00 \uCF00\uC774\uD06C\uB97C \uB9CC\uB4E4\uC5B4 \uC8FC\uC2E4\uAC70\uC57C!
+        \uB4E4\uACE0 \uC18C\uD30C\uB85C \uAC00\uBA74 \uB3FC!"
+      speakerName: "\uC11C\uC0C1\uD6C8"
+      speakerPortrait: {fileID: 764588270, guid: 4d0297b35e11cc24fb22ce37c566eb88, type: 3}
+    targetIngredientObjects: []
+  gameStartDialogues:
+  - text: "\uC5EC\uAE34... \uC5B4\uB514\uC9C0? \uBD84\uC704\uAE30\uAC00 \uC880 \uC774\uC0C1\uD55C\uB370?"
+    speakerName: "\uC5FC\uB780\uC601"
+    speakerPortrait: {fileID: 568604705, guid: dc29777644dc5774fae65d56290cc3a5, type: 3}
+  - text: "\uADF8\uB9AC\uACE0 \uC0C1\uD6C8\uC774\uB294 \uB610 \uC5B4\uB514 \uC0AC\uB77C\uC9C4\uAC70\uC57C,
+      \uC9C4\uC9DC"
+    speakerName: "\uC5FC\uB780\uC601"
+    speakerPortrait: {fileID: 568604705, guid: dc29777644dc5774fae65d56290cc3a5, type: 3}
+  - text: "(\uCE58\uC9C0\uC9C1...)"
+    speakerName: ???
+    speakerPortrait: {fileID: 21300008, guid: d79edf18a76e2654a9ac99f15de8b2b3, type: 3}
+  - text: "\uB780\uC601\uC544! \uB0B4 \uBAA9\uC18C\uB9AC\uAC00 \uB4E4\uB824?"
+    speakerName: ???
+    speakerPortrait: {fileID: 21300008, guid: d79edf18a76e2654a9ac99f15de8b2b3, type: 3}
+  - text: "\uC5B4?! \uC0C1\uD6C8\uC774\uC57C?"
+    speakerName: "\uC5FC\uB780\uC601"
+    speakerPortrait: {fileID: 1861983472, guid: dc29777644dc5774fae65d56290cc3a5, type: 3}
+  - text: "\uC751 \uB098\uC57C \uB098! \uB180\uB77C\uC9C0\uB9C8!"
+    speakerName: "\uC11C\uC0C1\uD6C8"
+    speakerPortrait: {fileID: 1234337718, guid: dc29777644dc5774fae65d56290cc3a5, type: 3}
+  - text: "\uB098\uB294 \uC9C0\uAE08 \uC6C0\uC9C1\uC77C \uC218\uAC00 \uC5C6\uC5B4\uC11C...
+      \uBBF8\uC548\uD55C\uB370 \uC9C1\uC811 \uB3C4\uC640\uC8FC\uB7EC \uAC00\uC9C0
+      \uBABB\uD560 \uAC83 \uAC19\uC544"
+    speakerName: "\uC11C\uC0C1\uD6C8"
+    speakerPortrait: {fileID: 764588270, guid: 4d0297b35e11cc24fb22ce37c566eb88, type: 3}
+  - text: "\uC6B0\uC120\uC740 \uC790\uAE30\uAC00 \uCF00\uC774\uD06C\uC758 \uC7AC\uB8CC\uB97C
+      \uBAA8\uC544\uC92C\uC73C\uBA74 \uD574"
+    speakerName: "\uC11C\uC0C1\uD6C8"
+    speakerPortrait: {fileID: 764588270, guid: 4d0297b35e11cc24fb22ce37c566eb88, type: 3}
+  - text: "\uC5B4..? \uC7AC\uB8CC\uB97C? \uC5B4\uB5A4\uAC78 \uBAA8\uC544\uC57C\uD558\uB294\uB370?"
+    speakerName: "\uC5FC\uB780\uC601"
+    speakerPortrait: {fileID: 1364516766, guid: 4d0297b35e11cc24fb22ce37c566eb88, type: 3}
+  - text: "\uADF8\uAC74 \uB0B4\uAC00 \uCC28\uADFC\uCC28\uADFC \uC54C\uB824\uC904\uAC8C!"
+    speakerName: "\uC11C\uC0C1\uD6C8"
+    speakerPortrait: {fileID: 764588270, guid: 4d0297b35e11cc24fb22ce37c566eb88, type: 3}
+  - text: "\uC6B0\uC120\uC740 \uADF8 \uC8FC\uBCC0\uC744 \uB3CC\uC544\uBCF4\uBA74\uC11C
+      \uD480 \uC232 \uC0AC\uC774\uC5D0 \uC788\uB294 \uB538\uAE30\uB97C \uBAA8\uC544\uC918!"
+    speakerName: "\uC11C\uC0C1\uD6C8"
+    speakerPortrait: {fileID: 764588270, guid: 4d0297b35e11cc24fb22ce37c566eb88, type: 3}
+  - text: "\uC7AC\uB8CC\uB294 \uBE5B\uC774\uB098\uACE0 \uC788\uC744\uAC70\uC57C!
+      \uAC00\uAE4C\uC774 \uAC00\uC11C \uC218\uC9D1[F] \uD0A4 \uB204\uB974\uBA74 \uB3FC!"
+    speakerName: "\uC11C\uC0C1\uD6C8"
+    speakerPortrait: {fileID: 764588270, guid: 4d0297b35e11cc24fb22ce37c566eb88, type: 3}
+  - text: "\uB538\uAE30 5\uAC1C\uB9CC \uBAA8\uC544\uC918!"
+    speakerName: "\uC11C\uC0C1\uD6C8"
+    speakerPortrait: {fileID: 764588270, guid: 4d0297b35e11cc24fb22ce37c566eb88, type: 3}
+  - text: "(\uD55C\uC228) \uC54C\uACA0\uC5B4. \uD574\uC904\uAC8C."
+    speakerName: "\uC5FC\uB780\uC601"
+    speakerPortrait: {fileID: 568604705, guid: dc29777644dc5774fae65d56290cc3a5, type: 3}

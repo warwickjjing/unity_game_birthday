@@ -1,6 +1,7 @@
 ﻿using UnityEngine.UI;
 using UnityEngine;
 using System.Collections.Generic;
+using UnityEngine.SceneManagement;
 
 /// <summary>
 /// Object Operation Highlight and Mouse Trigger Controller
@@ -47,11 +48,34 @@ public class UBS_Operator : MonoBehaviour
 
     void Start()
     {
-        player = GameObject.FindGameObjectWithTag("Player").transform;
-        messageText = GameObject.Find("MessageText1").GetComponent<Text>();
-        crossHair = GameObject.Find("CrossHair2").GetComponent<Image>();
-        highlightMaterial = UBS_Global.instance.defaultObjects.highlightMaterial;
-        crossHair.enabled = false;
+        // TitleScene에서는 UBS 상호작용 UI를 사용하지 않으므로 초기화하지 않음
+        if (SceneManager.GetActiveScene().name == "TitleScene")
+        {
+            init = false;
+            return;
+        }
+
+        var playerGo = GameObject.FindGameObjectWithTag("Player");
+        if (playerGo != null) player = playerGo.transform;
+
+        var msgGo = GameObject.Find("MessageText1");
+        if (msgGo != null) messageText = msgGo.GetComponent<Text>();
+
+        var crossGo = GameObject.Find("CrossHair2");
+        if (crossGo != null) crossHair = crossGo.GetComponent<Image>();
+
+        if (UBS_Global.instance != null && UBS_Global.instance.defaultObjects != null)
+            highlightMaterial = UBS_Global.instance.defaultObjects.highlightMaterial;
+
+        if (crossHair != null) crossHair.enabled = false;
+
+        // 필수 참조가 없으면 조용히 비활성화 (NRE 방지)
+        if (player == null || messageText == null || crossHair == null || highlightMaterial == null)
+        {
+            init = false;
+            return;
+        }
+
         init = true;
 
     } // End Start

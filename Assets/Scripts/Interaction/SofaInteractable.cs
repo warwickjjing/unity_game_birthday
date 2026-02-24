@@ -26,15 +26,74 @@ namespace BirthdayCakeQuest.Interaction
 
         private bool _hasTriggered;
 
+        private void Awake()
+        {
+            // inventory가 Inspector에서 할당되지 않았으면 자동으로 할당
+            if (inventory == null)
+            {
+                inventory = IngredientInventory.Instance;
+                if (inventory != null)
+                {
+                    Debug.Log("[SofaInteractable] IngredientInventory를 자동으로 할당했습니다.");
+                }
+                else
+                {
+                    Debug.LogWarning("[SofaInteractable] IngredientInventory.Instance를 찾을 수 없습니다!");
+                }
+            }
+        }
+
+        private void Start()
+        {
+            // Start에서도 inventory 확인 (Awake에서 Instance가 아직 생성되지 않았을 수 있음)
+            if (inventory == null)
+            {
+                inventory = IngredientInventory.Instance;
+                if (inventory != null)
+                {
+                    Debug.Log("[SofaInteractable] Start에서 IngredientInventory를 할당했습니다.");
+                }
+                else
+                {
+                    // IngredientInventory를 찾을 수 없으면 코루틴으로 재시도
+                    StartCoroutine(FindInventoryDelayed());
+                }
+            }
+        }
+
+        /// <summary>
+        /// IngredientInventory를 찾을 때까지 재시도합니다.
+        /// </summary>
+        private System.Collections.IEnumerator FindInventoryDelayed()
+        {
+            int retryCount = 0;
+            while (inventory == null && retryCount < 30) // 최대 30프레임 (약 0.5초) 재시도
+            {
+                yield return null;
+                inventory = IngredientInventory.Instance;
+                retryCount++;
+            }
+        }
+
         public bool CanInteract
         {
             get
             {
                 if (_hasTriggered)
+                {
                     return false;
+                }
 
-                // 모든 재료를 수집했는지 확인
-                return inventory != null && inventory.AllCollected;
+                // inventory가 null이면 Instance를 다시 찾기
+                if (inventory == null)
+                {
+                    inventory = IngredientInventory.Instance;
+                }
+                
+                var inv = inventory ?? IngredientInventory.Instance;
+                bool canInteract = inv != null && inv.AllCollected;
+                
+                return canInteract;
             }
         }
 
@@ -43,37 +102,45 @@ namespace BirthdayCakeQuest.Interaction
             if (_hasTriggered)
                 return "";
 
-            if (inventory != null && inventory.AllCollected)
+            // inventory가 null이면 Instance를 다시 찾기
+            if (inventory == null)
+            {
+                inventory = IngredientInventory.Instance;
+            }
+            
+            var inv = inventory ?? IngredientInventory.Instance;
+            if (inv != null && inv.AllCollected)
+            {
                 return interactPrompt;
+            }
             else
+            {
                 return incompletePrompt;
+            }
         }
 
         public void Interact(GameObject interactor)
         {
+            // 디버그: 상호작용 시도 시 상태 확인
+            var inv = inventory ?? IngredientInventory.Instance;
+
             if (!CanInteract)
             {
-                Debug.LogWarning("[SofaInteractable] Cannot interact - ingredients not collected.");
+                var invCheck = inventory ?? IngredientInventory.Instance;
                 return;
             }
 
             if (_hasTriggered)
             {
-                Debug.LogWarning("[SofaInteractable] Already triggered.");
                 return;
             }
 
             _hasTriggered = true;
-            Debug.Log("[SofaInteractable] Player sat on sofa, starting ending cutscene!");
 
             // 엔딩 컷씬 시작
             if (cutsceneController != null)
             {
                 cutsceneController.StartFromSofa(interactor.transform);
-            }
-            else
-            {
-                Debug.LogError("[SofaInteractable] EndingCutsceneController is not assigned!");
             }
         }
 
