@@ -116,14 +116,15 @@ namespace BirthdayCakeQuest.UI
             _questManager = BirthdayCakeQuest.Managers.QuestSequenceManager.Instance;
             _dialogueSystem = DialogueSystem.Instance;
 
-
             if (_inventory == null)
             {
+                Debug.LogError("[QuestUI] IngredientInventory를 찾을 수 없습니다!");
                 return;
             }
 
             if (_questManager == null)
             {
+                Debug.LogError("[QuestUI] QuestSequenceManager를 찾을 수 없습니다!");
                 return;
             }
 
@@ -148,15 +149,50 @@ namespace BirthdayCakeQuest.UI
                 {
                     strawberryManager.OnStrawberryCountChanged += OnStrawberryCountChanged;
                 }
+                else
+                {
+                    Debug.LogWarning("[QuestUI] StrawberryCollectionManager를 찾을 수 없습니다!");
+                }
                 
                 _isInitialized = true;
             }
 
             // 초기 UI는 OnQuestChanged 이벤트로 생성됨 (게임 시작 대화 후)
-            // CreateQuestItems()와 UpdateQuestDisplay()는 OnQuestChanged에서 호출
+            // 하지만 빌드에서 이벤트가 이미 발생했을 수 있으므로, 현재 퀘스트가 있으면 즉시 UI 생성
+            StartCoroutine(InitializeQuestUIAfterDelay());
             
             // 씬 복귀 시: 대화가 재생 중이 아니고 퀘스트가 이미 활성화되었다면 QuestPanel 표시
             StartCoroutine(CheckAndShowQuestPanelOnSceneReturn());
+        }
+        
+        /// <summary>
+        /// 초기화 후 현재 퀘스트가 있으면 UI를 생성합니다 (빌드에서 이벤트를 놓쳤을 경우 대비).
+        /// </summary>
+        private System.Collections.IEnumerator InitializeQuestUIAfterDelay()
+        {
+            // 모든 초기화가 완료되도록 대기
+            yield return null;
+            yield return null;
+            
+            // 현재 퀘스트가 있고, UI가 아직 생성되지 않았으면 생성
+            if (_questManager != null && _questManager.CurrentActiveIngredient != (IngredientId)(-1))
+            {
+                if (ingredientListContainer != null && ingredientListContainer.childCount == 0)
+                {
+                    Debug.Log("[QuestUI] 빌드에서 초기 퀘스트 UI 생성 (이벤트를 놓쳤을 수 있음)");
+                    CreateQuestItems();
+                    UpdateQuestDisplay();
+                    
+                    // 대화가 재생 중이 아니면 QuestPanel 표시
+                    if (_dialogueSystem == null || !_dialogueSystem.IsPlaying)
+                    {
+                        if (questPanel != null && !questPanel.activeSelf)
+                        {
+                            questPanel.SetActive(true);
+                        }
+                    }
+                }
+            }
         }
         
         /// <summary>
@@ -295,10 +331,12 @@ namespace BirthdayCakeQuest.UI
                 if (strawberryManager != null)
                 {
                     textComponent.text = $"{ingredientName} ({strawberryManager.CollectedCount}/{strawberryManager.TargetCount})";
+                    Debug.Log($"[QuestUI] 딸기 퀘스트 UI 생성: {textComponent.text}");
                 }
                 else
                 {
-                    textComponent.text = ingredientName;
+                    Debug.LogWarning("[QuestUI] StrawberryCollectionManager가 null입니다! 기본 텍스트만 표시합니다.");
+                    textComponent.text = $"{ingredientName} (0/5)"; // 기본값 표시
                 }
             }
             else

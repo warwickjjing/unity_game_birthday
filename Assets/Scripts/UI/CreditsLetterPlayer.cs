@@ -1,8 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using TMPro;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
+using TMPro;
 using BirthdayCakeQuest.Managers;
 
 namespace BirthdayCakeQuest.UI
@@ -69,7 +70,24 @@ namespace BirthdayCakeQuest.UI
         {
             if (returnButton != null)
             {
+                // 버튼 클릭 이벤트 자동 연결
+                Button button = returnButton.GetComponent<Button>();
+                if (button != null)
+                {
+                    button.onClick.RemoveAllListeners(); // 기존 리스너 제거 (중복 방지)
+                    button.onClick.AddListener(OnReturnButtonClicked);
+                    button.interactable = true; // 버튼 활성화 보장
+                }
+                else
+                {
+                    Debug.LogWarning("[CreditsLetterPlayer] ReturnButton에 Button 컴포넌트가 없습니다!");
+                }
+
                 returnButton.SetActive(false);
+            }
+            else
+            {
+                Debug.LogWarning("[CreditsLetterPlayer] ReturnButton이 할당되지 않았습니다!");
             }
 
             // 초기 상태: 모든 텍스트 숨김
@@ -90,7 +108,6 @@ namespace BirthdayCakeQuest.UI
                 {
                     _contentSizeFitter = letterContent.gameObject.AddComponent<ContentSizeFitter>();
                     _contentSizeFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-                    Debug.Log("[CreditsLetterPlayer] ContentSizeFitter 추가됨");
                 }
             }
 
@@ -103,7 +120,6 @@ namespace BirthdayCakeQuest.UI
                     textSizeFitter = letterText.gameObject.AddComponent<ContentSizeFitter>();
                     textSizeFitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
                     textSizeFitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
-                    Debug.Log("[CreditsLetterPlayer] LetterText에 ContentSizeFitter 추가됨");
                 }
             }
 
@@ -115,6 +131,106 @@ namespace BirthdayCakeQuest.UI
             }
             _musicSource.playOnAwake = false;
             _musicSource.loop = false;
+        }
+
+        private void Start()
+        {
+            // Start에서 버튼 이벤트 재연결 및 EventSystem/Canvas 확인
+            EnsureButtonAndEventSystem();
+        }
+
+        /// <summary>
+        /// 버튼과 EventSystem, Canvas를 확인하고 활성화합니다.
+        /// </summary>
+        private void EnsureButtonAndEventSystem()
+        {
+            if (returnButton == null)
+            {
+                Debug.LogWarning("[CreditsLetterPlayer] ReturnButton이 null입니다!");
+                return;
+            }
+
+            // Canvas 확인 및 활성화
+            Canvas canvas = returnButton.GetComponentInParent<Canvas>();
+            if (canvas == null)
+            {
+                canvas = FindObjectOfType<Canvas>();
+            }
+
+            if (canvas != null)
+            {
+                if (!canvas.gameObject.activeSelf)
+                {
+                    canvas.gameObject.SetActive(true);
+                }
+                if (!canvas.enabled)
+                {
+                    canvas.enabled = true;
+                }
+
+                // GraphicRaycaster 확인
+                var raycaster = canvas.GetComponent<GraphicRaycaster>();
+                if (raycaster == null)
+                {
+                    raycaster = canvas.gameObject.AddComponent<GraphicRaycaster>();
+                }
+                if (!raycaster.enabled)
+                {
+                    raycaster.enabled = true;
+                }
+            }
+            else
+            {
+                Debug.LogWarning("[CreditsLetterPlayer] Canvas를 찾을 수 없습니다!");
+            }
+
+            // EventSystem 확인
+            if (EventSystem.current == null)
+            {
+                EventSystem existing = FindObjectOfType<EventSystem>();
+                if (existing != null)
+                {
+                    EventSystem.current = existing;
+                }
+                else
+                {
+                    // EventSystem 생성
+                    GameObject eventSystemObj = new GameObject("EventSystem");
+                    EventSystem newEventSystem = eventSystemObj.AddComponent<EventSystem>();
+                    eventSystemObj.AddComponent<StandaloneInputModule>();
+                    EventSystem.current = newEventSystem;
+                }
+            }
+
+            // 버튼 이벤트 재연결
+            Button button = returnButton.GetComponent<Button>();
+            if (button != null)
+            {
+                button.onClick.RemoveAllListeners();
+                button.onClick.AddListener(OnReturnButtonClicked);
+                button.interactable = true;
+                
+                // 버튼이 활성화되어 있는지 확인
+                if (!returnButton.activeSelf)
+                {
+                    returnButton.SetActive(true);
+                }
+                
+                // Image 컴포넌트 확인 (Raycast Target이 켜져 있어야 클릭 가능)
+                Image buttonImage = returnButton.GetComponent<Image>();
+                if (buttonImage != null)
+                {
+                    buttonImage.raycastTarget = true;
+                }
+                else
+                {
+                    Debug.LogWarning("[CreditsLetterPlayer] ReturnButton에 Image 컴포넌트가 없습니다! 버튼이 클릭되지 않을 수 있습니다.");
+                }
+            }
+            else
+            {
+                Debug.LogError("[CreditsLetterPlayer] ReturnButton에 Button 컴포넌트가 없습니다!");
+            }
         }
 
         /// <summary>
@@ -476,6 +592,25 @@ namespace BirthdayCakeQuest.UI
             if (returnButton != null)
             {
                 returnButton.SetActive(false);
+            }
+        }
+
+        /// <summary>
+        /// 타이틀로 돌아가기 버튼 클릭 처리
+        /// </summary>
+        private void OnReturnButtonClicked()
+        {
+            // 크레딧 정지
+            StopCredits();
+            
+            // 타이틀 씬으로 이동
+            if (SceneLoader.Instance != null)
+            {
+                SceneLoader.Instance.LoadTitleScene();
+            }
+            else
+            {
+                Debug.LogError("[CreditsLetterPlayer] SceneLoader를 찾을 수 없습니다!");
             }
         }
     }

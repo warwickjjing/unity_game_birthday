@@ -19,17 +19,22 @@ namespace BirthdayCakeQuest.Managers
         [Tooltip("홈 씬 배경음 (파일 할당 시 자동 재생)")]
         [SerializeField] private AudioClip homeMusic;
         
-        [Tooltip("배경음 볼륨 (0~1)")]
+        [Tooltip("배경음 볼륨 (0~1), 옵션에서 저장 시 PlayerPrefs로 덮어씀")]
         [SerializeField, Range(0f, 1f)] private float musicVolume = 0.5f;
         
         [Tooltip("음악 전환 페이드 시간 (초)")]
         [SerializeField] private float musicFadeDuration = 1f;
 
+        private const string PrefsBGMVolume = "BGMVolume";
+        private const string PrefsSFXVolume = "SFXVolume";
+        private const string PrefsFullscreen = "Fullscreen";
+
         private AudioSource _musicSource;
         private bool _isFirstSceneLoad = true; // 첫 씬 로드 여부
 
         /// <summary>
-        /// 싱글톤 인스턴스
+        /// 싱글톤 인스턴스. 씬에 배치된 SceneLoader 중 Title/Home Music이 할당된 것을 우선 사용합니다.
+        /// (Plan 추가 후 다른 스크립트가 Instance를 먼저 쓰면 빈 인스턴스가 만들어져 BGM이 None이 되는 일을 막기 위함.)
         /// </summary>
         public static SceneLoader Instance
         {
@@ -37,6 +42,24 @@ namespace BirthdayCakeQuest.Managers
             {
                 if (_instance == null)
                 {
+                    // 비활성 오브젝트 포함해 전부 찾고, titleMusic이 할당된 것을 우선 사용 (씬에 설정해 둔 것)
+                    SceneLoader[] all = Object.FindObjectsOfType<SceneLoader>(true);
+                    SceneLoader withClips = null;
+                    foreach (var loader in all)
+                    {
+                        if (loader == null) continue;
+                        if (loader.titleMusic != null || loader.homeMusic != null)
+                        {
+                            withClips = loader;
+                            break;
+                        }
+                    }
+                    SceneLoader existing = withClips != null ? withClips : (all.Length > 0 ? all[0] : null);
+                    if (existing != null)
+                    {
+                        _instance = existing;
+                        return _instance;
+                    }
                     GameObject go = new GameObject("SceneLoader");
                     _instance = go.AddComponent<SceneLoader>();
                     DontDestroyOnLoad(go);
@@ -55,6 +78,10 @@ namespace BirthdayCakeQuest.Managers
 
             _instance = this;
             DontDestroyOnLoad(gameObject);
+
+            // 저장된 옵션 불러오기
+            if (PlayerPrefs.HasKey(PrefsBGMVolume))
+                musicVolume = Mathf.Clamp01(PlayerPrefs.GetFloat(PrefsBGMVolume));
 
             // 배경음용 AudioSource 생성
             _musicSource = gameObject.AddComponent<AudioSource>();
@@ -510,6 +537,41 @@ namespace BirthdayCakeQuest.Managers
             }
 
             _musicSource.volume = musicVolume;
+        }
+
+        /// <summary>
+        /// BGM 볼륨 설정 (0~1). PlayerPrefs에 저장하며 즉시 적용합니다.
+        /// </summary>
+        public void SetMusicVolume(float volume)
+        {
+            musicVolume = Mathf.Clamp01(volume);
+            if (_musicSource != null)
+                _musicSource.volume = musicVolume;
+            PlayerPrefs.SetFloat(PrefsBGMVolume, musicVolume);
+            PlayerPrefs.Save();
+        }
+
+        /// <summary>
+        /// 현재 BGM 볼륨 (0~1)을 반환합니다.
+        /// </summary>
+        public float GetMusicVolume()
+        {
+            return musicVolume;
+        }
+
+        /// <summary>
+        /// 옵션 화면에서 볼륨 확인용으로, BGM이 재생 중이 아니면 타이틀 BGM을 잠깐 재생합니다.
+        /// (Inspector에 Title Music이 할당되어 있어야 함)
+        /// </summary>
+        public void EnsureBGMPlayingForOptionsPreview()
+        {
+            if (_musicSource == null) return;
+            if (_musicSource.isPlaying) return;
+            if (titleMusic == null) return;
+            _musicSource.clip = titleMusic;
+            _musicSource.volume = musicVolume;
+            _musicSource.loop = true;
+            _musicSource.Play();
         }
 
         /// <summary>

@@ -21,6 +21,12 @@ namespace BirthdayCakeQuest.UI
         [Tooltip("크레딧 보기 버튼 (테스트용)")]
         [SerializeField] private Button creditButton;
 
+        [Tooltip("설정(옵션) 버튼")]
+        [SerializeField] private Button settingsButton;
+
+        [Tooltip("옵션 패널 (GameOptionsUI가 붙은 GameObject). 설정 버튼 클릭 시 표시")]
+        [SerializeField] private GameObject optionsPanel;
+
         [Header("Settings")]
         [Tooltip("시작 시 로드할 씬 이름")]
         [SerializeField] private string mainSceneName = "Home";
@@ -68,6 +74,11 @@ namespace BirthdayCakeQuest.UI
                 {
                     creditButton.onClick.RemoveListener(OnCreditButtonClicked);
                     creditButton.onClick.AddListener(OnCreditButtonClicked);
+                }
+                if (settingsButton != null)
+                {
+                    settingsButton.onClick.RemoveListener(OnSettingsButtonClicked);
+                    settingsButton.onClick.AddListener(OnSettingsButtonClicked);
                 }
                 
                 // 즉시 타이틀 UI 표시 (버튼 활성화 지연 최소화)
@@ -433,6 +444,14 @@ namespace BirthdayCakeQuest.UI
                 creditButton.enabled = true;
                 creditButton.interactable = true;
             }
+            if (settingsButton != null)
+            {
+                settingsButton.gameObject.SetActive(true);
+                settingsButton.enabled = true;
+                settingsButton.interactable = true;
+            }
+            if (optionsPanel != null)
+                optionsPanel.SetActive(false);
         }
 
         public void HideTitleUI()
@@ -441,6 +460,8 @@ namespace BirthdayCakeQuest.UI
             if (startButton != null) startButton.gameObject.SetActive(false);
             if (quitButton != null) quitButton.gameObject.SetActive(false);
             if (creditButton != null) creditButton.gameObject.SetActive(false);
+            if (settingsButton != null) settingsButton.gameObject.SetActive(false);
+            if (optionsPanel != null) optionsPanel.SetActive(false);
         }
 
         private void Awake()
@@ -460,6 +481,10 @@ namespace BirthdayCakeQuest.UI
             {
                 creditButton.onClick.AddListener(OnCreditButtonClicked);
             }
+            if (settingsButton != null)
+            {
+                settingsButton.onClick.AddListener(OnSettingsButtonClicked);
+            }
         }
 
         private void OnDestroy()
@@ -478,6 +503,22 @@ namespace BirthdayCakeQuest.UI
             if (creditButton != null)
             {
                 creditButton.onClick.RemoveListener(OnCreditButtonClicked);
+            }
+            if (settingsButton != null)
+            {
+                settingsButton.onClick.RemoveListener(OnSettingsButtonClicked);
+            }
+        }
+
+        private void OnSettingsButtonClicked()
+        {
+            if (optionsPanel != null)
+            {
+                var optionsUI = optionsPanel.GetComponent<GameOptionsUI>();
+                if (optionsUI != null)
+                    optionsUI.Show();
+                else
+                    optionsPanel.SetActive(true);
             }
         }
 

@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -53,7 +54,9 @@ namespace BirthdayCakeQuest.MiniGames
                 deliveryZone.OnDelivery += HandleBagDelivered;
             }
 
-            // 종료 버튼 설정
+            // 종료 버튼 설정 (Inspector 참조가 빌드에서 끊기면 이름으로 찾기)
+            if (quitButton == null)
+                quitButton = FindQuitButtonInScene();
             if (quitButton != null)
             {
                 quitButton.onClick.RemoveListener(OnQuitButtonClicked);
@@ -62,16 +65,11 @@ namespace BirthdayCakeQuest.MiniGames
                     quitButton.gameObject.SetActive(true);
                 if (!quitButton.interactable)
                     quitButton.interactable = true;
+                Debug.Log("[FlourMiniGame2DScene] 나가기 버튼 연결됨: " + quitButton.gameObject.name);
             }
             else
             {
-                // 자동으로 찾기
-                quitButton = FindObjectOfType<UnityEngine.UI.Button>();
-                if (quitButton != null)
-                {
-                    quitButton.onClick.RemoveListener(OnQuitButtonClicked);
-                    quitButton.onClick.AddListener(OnQuitButtonClicked);
-                }
+                Debug.LogError("[FlourMiniGame2DScene] 나가기 버튼을 찾을 수 없습니다. 씬에 이름이 'QuitButton'인 Button이 있는지, 또는 Inspector에 quitButton을 할당하세요.");
             }
 
             // NPC에 Scene 컨트롤러 참조 전달
@@ -82,6 +80,42 @@ namespace BirthdayCakeQuest.MiniGames
 
             // 씬 진입 시 초기 대화 표시
             StartCoroutine(ShowInitialDialogueAfterDelay());
+        }
+
+        /// <summary>
+        /// 활성 씬 계층에서 FlourDialogueUI를 찾습니다. 빌드에서도 안정적으로 동작합니다.
+        /// </summary>
+        private static FlourDialogueUI FindFlourDialogueUIInActiveScene()
+        {
+            Scene active = SceneManager.GetActiveScene();
+            if (!active.isLoaded) return null;
+            GameObject[] roots = active.GetRootGameObjects();
+            foreach (GameObject root in roots)
+            {
+                FlourDialogueUI ui = root.GetComponentInChildren<FlourDialogueUI>(true);
+                if (ui != null) return ui;
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// 활성 씬에서 이름이 "QuitButton"인 Button을 찾습니다. 빌드에서 Inspector 참조가 끊겼을 때 사용합니다.
+        /// </summary>
+        private static UnityEngine.UI.Button FindQuitButtonInScene()
+        {
+            Scene active = SceneManager.GetActiveScene();
+            if (!active.isLoaded) return null;
+            GameObject[] roots = active.GetRootGameObjects();
+            foreach (GameObject root in roots)
+            {
+                UnityEngine.UI.Button[] buttons = root.GetComponentsInChildren<UnityEngine.UI.Button>(true);
+                foreach (var btn in buttons)
+                {
+                    if (btn != null && (btn.gameObject.name == "QuitButton" || btn.gameObject.name.Contains("Quit")))
+                        return btn;
+                }
+            }
+            return null;
         }
 
         /// <summary>
@@ -112,37 +146,44 @@ namespace BirthdayCakeQuest.MiniGames
 
             Debug.Log($"[FlourMiniGame2DScene] FlourDialogueUI 찾기 시작...");
             
-            // 먼저 현재 씬(FlourMiniGame)에서 찾기
-            FlourDialogueUI dialogueUI = FindObjectOfType<FlourDialogueUI>();
+            // 빌드에서도 안정적으로 찾기: 활성 씬의 루트부터 계층 탐색 (비활성 오브젝트 포함)
+            FlourDialogueUI dialogueUI = FindFlourDialogueUIInActiveScene();
             
             if (dialogueUI == null)
             {
-                Debug.Log("[FlourMiniGame2DScene] FindObjectOfType으로 못 찾음, Resources.FindObjectsOfTypeAll 시도...");
-                // 현재 씬에서 못 찾으면 비활성화된 오브젝트도 포함해서 찾기
+                // 폴백: FindObjectOfType (활성만)
+                dialogueUI = FindObjectOfType<FlourDialogueUI>();
+            }
+            if (dialogueUI == null)
+            {
+                Debug.Log("[FlourMiniGame2DScene] 활성 씬에서 못 찾음, Resources.FindObjectsOfTypeAll 시도...");
                 FlourDialogueUI[] allDialogueUIs = Resources.FindObjectsOfTypeAll<FlourDialogueUI>();
-                Debug.Log($"[FlourMiniGame2DScene] 전체 FlourDialogueUI 개수: {allDialogueUIs.Length}");
-                
                 foreach (var ui in allDialogueUIs)
                 {
+                    if (ui == null) continue;
                     string sceneName = ui.gameObject.scene.name;
-                    Debug.Log($"[FlourMiniGame2DScene] FlourDialogueUI 발견 - 씬: {sceneName}, 활성화: {ui.gameObject.activeInHierarchy}");
-                    
-                    // FlourMiniGame 씬에 있는 것만 사용
                     if (sceneName == "FlourMiniGameScene" || sceneName.Contains("FlourMiniGame"))
                     {
                         dialogueUI = ui;
-                        Debug.Log($"[FlourMiniGame2DScene] FlourDialogueUI 찾음! 씬: {sceneName}");
                         break;
                     }
                 }
             }
-            else
-            {
-                Debug.Log($"[FlourMiniGame2DScene] FindObjectOfType으로 FlourDialogueUI 찾음 - 씬: {dialogueUI.gameObject.scene.name}");
-            }
             
             if (dialogueUI != null)
             {
+                // 빌드에서 Canvas 비활성화 후 재활성화 타이밍 이슈 대비: 대화 UI 및 부모(Canvas) 활성화
+                if (!dialogueUI.gameObject.activeInHierarchy)
+                {
+                    dialogueUI.gameObject.SetActive(true);
+                    Transform parent = dialogueUI.transform.parent;
+                    while (parent != null)
+                    {
+                        if (!parent.gameObject.activeSelf)
+                            parent.gameObject.SetActive(true);
+                        parent = parent.parent;
+                    }
+                }
                 Debug.Log($"[FlourMiniGame2DScene] 대화 표시 시작 - 대화 개수: {initialDialogues.Count}");
                 dialogueUI.ShowDialogue(initialDialogues);
                 _hasShownInitialDialogue = true;
